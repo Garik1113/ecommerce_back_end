@@ -4,10 +4,10 @@ import ErrorHandler from "../models/errorHandler";
 import User, { IUser } from "../models/user";
 import { comparePasswords, convertDbUserToNormal, convertUserObjecttToDbFormat } from "../common/user";
 import { TUser } from "../types/user";
-import UserDb from '../db/user';
+import UserDb from '../collections/user';
 import { Result, ValidationError, validationResult } from 'express-validator';
 import { NextFunction, Request, Response } from 'express';
-import { generateTokenWithUserId, getTokenFromRequest, jwtVerifyToken } from "../util/jwt";
+import { generateTokenWithUserId } from "../helpers/jwt";
 
 
 class UserController {
@@ -18,25 +18,6 @@ class UserController {
             text:`You'ave reached the ${this.constructor.name} default method`
         };
     };
-    // public async signup(req: Request, userObject:any): Promise<TUser> {
-    //     const errors = validationResult(req);
-    //     console.log("ERRORS", errors.isEmpty())
-
-    //     const userDb: TUser = convertUserObjecttToDbFormat(userObject);
-    //     try {
-    //         const existUser = await UserDb.findByEmail(userDb.email);
-    //         if (existUser) {
-    //             throw new ErrorHandler(409, "User with that email is already exist");
-    //         } else {
-    //             const userDoc: Document = await UserDb.signup(userDb);
-    //             const user: TUser =  convertDbUserToNormal(userDoc)
-    //             return user;
-    //         }
-    //     } catch (error) {
-    //         console.log(error)
-    //         throw new ErrorHandler(error.statusCode, error.message);
-    //     }
-    // }
     async signup (req: Request, res: Response, next: NextFunction): Promise<void> {    
         const errors: Result<ValidationError> = validationResult(req);
         const userDb: TUser = convertUserObjecttToDbFormat(req.body);
@@ -75,7 +56,6 @@ class UserController {
             } else {
                 throw new ErrorHandler(401, "Incorrect password");
             }
-            
         } catch (error) {
             console.log(error);
             next(error);

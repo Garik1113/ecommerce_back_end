@@ -1,7 +1,6 @@
 import { Model, Document } from "mongoose";
-import { convertDbProductToNormal } from "../common/product";
 const ObjectID = require('mongodb').ObjectID;
-import Product, { IProduct } from "../models/product";
+import Product from "../models/product";
 import { TProduct } from "../types/product";
 
 class ProductDb {
@@ -13,7 +12,7 @@ class ProductDb {
     }
 
     async getProductById (_id: String):Promise<Document> {
-        const document: Document = await this._db.findById(_id);
+        const document: Document = await this._db.findById(ObjectID(_id));
         return document;
     }
     async updateProduct (_id: string, body: any):Promise<TProduct | any> {

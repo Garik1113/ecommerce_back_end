@@ -15,3 +15,11 @@ export const validateSignin = () => {
         body('password', "Password is required").exists()
     ]
 }
+
+export const validateAddToCart = () => {
+    return [
+        body('itemId', 'itemId was not provided').exists(),
+        body('cartId', 'cartId was not provided').exists(),
+        body('quantity', 'quantity was not provided').exists()
+    ]
+}

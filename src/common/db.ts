@@ -3,6 +3,13 @@ import { ICategory } from "../models/category";
 import isEmpty from 'lodash/isEmpty'
 import { IProduct } from "../models/product";
 import { IUser } from "../models/user";
+import ErrorHandler from "../models/errorHandler";
+
+export const validateObjectId = (id:any) => {
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+        throw new ErrorHandler(403, "Invalid id");
+    }
+}
 
 export const getItemById = async (DbCollection: Model<any>, _id: string):Promise<Document> => {
     const item: Document = await DbCollection.findById(_id);

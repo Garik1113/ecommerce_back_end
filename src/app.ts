@@ -3,7 +3,7 @@ import express, { Request, Response, NextFunction, Express } from 'express';
 import ErrorHandler from './models/errorHandler';
 import MainRouter from './routers/mainRouter';
 import bodyParser from 'body-parser';
-import Database from './db/database';
+import Database from './db/mongoDb';
 
 dotenv.config({
     path: '.env'

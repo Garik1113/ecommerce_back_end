@@ -1,7 +1,7 @@
 import { Document } from "mongoose";
 import { ICategory } from "../models/category";
 import ErrorHandler from "../models/errorHandler";
-import CategoryDb from '../db/category';
+import CategoryDb from '../collections/category';
 import { convertCategoryObjectToDbFormat, convertDbCategoryToNormal } from '../common/category'
 import { TCategory } from "../types/category";
 

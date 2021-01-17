@@ -8,7 +8,8 @@ class Database {
             await mongoose.connect(this.URI, 
                 {   
                     useNewUrlParser: true,
-                    useUnifiedTopology: true
+                    useUnifiedTopology: true,
+                    useFindAndModify: false
                 },
                 (error) => {
                     if(error) {

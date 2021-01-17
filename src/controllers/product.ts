@@ -4,7 +4,7 @@ import { convertDbProductToNormal, convertProductObjectToDbFormat } from "../com
 import ErrorHandler from "../models/errorHandler";
 import Product, { IProduct } from "../models/product";
 import { TProduct } from "../types/product";
-import ProductDb from '../db/product';
+import ProductDb from '../collections/product';
 
 class ProductController {
     private _DbCollection: Model<any> = Product;
@@ -27,8 +27,8 @@ class ProductController {
     }
     public async getProductById(_id: string):Promise<TProduct> {
         try {
-            const document:Document = await ProductDb.getProductById(_id);
-            const product:TProduct = convertDbProductToNormal(document);
+            const document: Document = await ProductDb.getProductById(_id);
+            const product: TProduct = convertDbProductToNormal(document);
 
             return product;
         } catch (error) {
