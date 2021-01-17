@@ -32,7 +32,8 @@ server.app.use((err: ErrorHandler, req: Request, res: Response, next: NextFuncti
     res.status(err.statusCode || 500).json({
         status: "error",
         statusCode: err.statusCode,
-        message: err.message
+        message: err.message,
+        errors: err.errors
     });
 });
 
@@ -40,5 +41,5 @@ server.app.use((err: ErrorHandler, req: Request, res: Response, next: NextFuncti
 
 (async (port = process.env.APP_PORT || 5000) => {
     await server.app.listen(port, () => console.log(`Listening on port ${port}`));
-    Database.connect();
+    await Database.connect();
 })();

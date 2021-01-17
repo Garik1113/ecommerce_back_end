@@ -1,12 +1,12 @@
 import { Schema, Document, model } from 'mongoose';
 
 export interface IProduct extends Document {
-    title: string,
+    name: string,
     category_id: string
 };
 
 const ProductSchema: Schema = new Schema({
-    title: { type: String, required: true },
+    name: { type: String, required: true },
     category_id: { type: String, required: true }
 });
 

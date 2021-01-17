@@ -1,6 +1,10 @@
 import { NextFunction, Router, Request, Response } from "express";
 import UserController from '../controllers/user';
 import { Document } from 'mongoose';
+import { TUser } from "../types/user";
+import { validateCreateUser, validateSignin } from "../helpers/validation";
+import { validationResult, check } from 'express-validator'
+import { verifyToken } from "../helpers/jwt";
 
 class UserRouter {
     private _router: Router = Router();
@@ -14,14 +18,8 @@ class UserRouter {
     }
 
     _configure() {
-        this._router.post('/', async (req: Request, res: Response, next: NextFunction):Promise<void> => {    
-            try {
-                const result:Document = await this._controller.createOne(req.body);
-                res.status(200).json(result);
-            } catch (error) {
-                next(error);
-            };
-        });
+        this._router.post('/signup',  validateCreateUser(),  this._controller.signup);
+        this._router.post('/signin', validateSignin(), verifyToken,  this._controller.signin);
         this._router.delete('/:_id', async (req: Request, res: Response, next: NextFunction):Promise<void> => {    
             try {
                 await this._controller.deleteOne(req.params._id);
@@ -56,11 +54,6 @@ class UserRouter {
                 next(error);
             };
         });
-        this._router.post('/signin',  async (req: Request, res: Response, next: NextFunction):Promise<void> => {
-            // res.status(200).json("{ users }");
-            const token: string = await this._controller.signin(req.body);
-            res.status(200).json("token");
-        })
     }
 }
 

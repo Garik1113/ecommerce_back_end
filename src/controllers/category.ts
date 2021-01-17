@@ -1,55 +1,62 @@
-import { Model, Document} from "mongoose";
-import { deleteOne, getItemById, getItems, insertOne, updateOne } from '../common/db'
-import Category, { ICategory } from "../models/category";
+import { Document } from "mongoose";
+import { ICategory } from "../models/category";
 import ErrorHandler from "../models/errorHandler";
-import { IProduct } from "../models/product";
+import CategoryDb from '../db/category';
+import { convertCategoryObjectToDbFormat, convertDbCategoryToNormal } from '../common/category'
+import { TCategory } from "../types/category";
 
 class CategoryController {
-    private _DbCollection: Model<any> = Category;
     defaulMethod() {
         return {
             text:`You'ave reached the ${this.constructor.name} default method`
         };
     };
-    public async createOne(categoryObject:ICategory):Promise<Document>   {
+    public async createCategory(category:any):Promise<TCategory> {
+        const formattedCategory:TCategory = convertCategoryObjectToDbFormat(category);
         try {
-            const category:Document = await insertOne(this._DbCollection, categoryObject);
+            const item:ICategory = await CategoryDb.createItem(formattedCategory);
+
+            return convertDbCategoryToNormal(item);
+        } catch (error) {
+            console.log(error)
+            throw new ErrorHandler(error.statusCode, error.message);
+        }
+    }
+    public async getCategoryById(_id: String):Promise<TCategory> {
+        try {
+            const categoryDb: Document = await CategoryDb.getCategoryById(_id);
+            const category: TCategory =  convertDbCategoryToNormal(categoryDb);
+
             return category;
         } catch (error) {
             console.log(error)
             throw new ErrorHandler(error.statusCode, error.message);
         }
     }
-    public async deleteOne(_id: string):Promise<void> {
+    public async deleteCategory(_id: string):Promise<void> {
         try {
-            await deleteOne(this._DbCollection, _id);
+            await CategoryDb.deleteCategory(_id);
         } catch (error) {
             console.log(error)
             throw new ErrorHandler(error.statusCode, error.message);
         }
     }
-    public async updateOne(_id: string,  body: any):Promise<void> {
+    public async updateCategory(_id: string,  body: any):Promise<TCategory> {
         try {
-            await updateOne(this._DbCollection, _id, body);
-            return;
+            const category:TCategory = await CategoryDb.updateCategory(_id, body);
+
+            return category;
         } catch (error) {
             console.log(error);
             throw new ErrorHandler(error.statusCode, error.message); 
         }
     }
-    public async getOne(_id: string):Promise<Document> {
+    public async getAllCategories():Promise<TCategory[]> {
         try {
-            const category:Document = await getItemById(this._DbCollection, _id);
-            return category;
-        } catch (error) {
-            console.log(error)
-            throw new ErrorHandler(error.statusCode, error.message);
-        }
-    }
-    public async getAll():Promise<Document> {
-        try {
-            const categories: Document = await getItems(this._DbCollection);
-            return categories;
+            const categories: TCategory[] = await CategoryDb.getCategories();
+            const formatedToNormalCategories:TCategory[] = categories.map(category => convertDbCategoryToNormal(category));
+
+            return formatedToNormalCategories;
         } catch (error) {
             console.log(error)
             throw new ErrorHandler(error.statusCode, error.message);

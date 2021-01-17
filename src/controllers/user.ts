@@ -1,8 +1,14 @@
-import { Model, Document } from "mongoose";
+import { Model, Document, MongooseDocument } from "mongoose";
 import { deleteOne, getItemById, getItems, insertOne, updateOne, findOne } from '../common/db';
 import ErrorHandler from "../models/errorHandler";
 import User, { IUser } from "../models/user";
-import bcrypt from 'bcryptjs';
+import { comparePasswords, convertDbUserToNormal, convertUserObjecttToDbFormat } from "../common/user";
+import { TUser } from "../types/user";
+import UserDb from '../db/user';
+import { Result, ValidationError, validationResult } from 'express-validator';
+import { NextFunction, Request, Response } from 'express';
+import { generateTokenWithUserId, getTokenFromRequest, jwtVerifyToken } from "../util/jwt";
+
 
 class UserController {
     private _DbCollection: Model<any> = User;
@@ -12,16 +18,67 @@ class UserController {
             text:`You'ave reached the ${this.constructor.name} default method`
         };
     };
-    public async createOne(userObject:IUser):Promise<Document> {
-        const { password } = userObject;
-        const hashedPassword = await bcrypt.hash(password, 12);
-        userObject.password = hashedPassword;
+    // public async signup(req: Request, userObject:any): Promise<TUser> {
+    //     const errors = validationResult(req);
+    //     console.log("ERRORS", errors.isEmpty())
+
+    //     const userDb: TUser = convertUserObjecttToDbFormat(userObject);
+    //     try {
+    //         const existUser = await UserDb.findByEmail(userDb.email);
+    //         if (existUser) {
+    //             throw new ErrorHandler(409, "User with that email is already exist");
+    //         } else {
+    //             const userDoc: Document = await UserDb.signup(userDb);
+    //             const user: TUser =  convertDbUserToNormal(userDoc)
+    //             return user;
+    //         }
+    //     } catch (error) {
+    //         console.log(error)
+    //         throw new ErrorHandler(error.statusCode, error.message);
+    //     }
+    // }
+    async signup (req: Request, res: Response, next: NextFunction): Promise<void> {    
+        const errors: Result<ValidationError> = validationResult(req);
+        const userDb: TUser = convertUserObjecttToDbFormat(req.body);
         try {
-            const user:Document = await insertOne(this._DbCollection, userObject);
-            return user;
+            if(!errors.isEmpty()) {
+                throw new ErrorHandler(402, "Validation Error", errors.array());
+            }
+            const existUser = await UserDb.findByEmail(userDb.email);
+            if (existUser) {
+                throw new ErrorHandler(409, "User with that email is already exist");
+            } else {
+                const userDoc: Document = await UserDb.signup(userDb);
+                const user: TUser =  convertDbUserToNormal(userDoc);
+                res.status(200).json({ user });
+            }
         } catch (error) {
-            console.log(error)
-            throw new ErrorHandler(error.statusCode, error.message);
+            console.log(error);
+            next(error);
+        }
+    };
+    public async signin (req: Request, res: Response, next: NextFunction): Promise<void> {
+        const { email, password } = req.body;
+        const errors: Result<ValidationError> = validationResult(req);
+        try {
+            if (!errors.isEmpty()) {
+                throw new ErrorHandler(401, "Validation Error", errors.array());
+            }
+            const userDb: Document = await UserDb.findByEmail(email);
+            const user: TUser = convertDbUserToNormal(userDb);
+            if (!userDb) {
+                throw new ErrorHandler(401, "User with that email is not exists");
+            }
+            if (comparePasswords(password, user.password)) {
+                const token: string = generateTokenWithUserId(userDb._id);
+                res.status(200).json({ token });
+            } else {
+                throw new ErrorHandler(401, "Incorrect password");
+            }
+            
+        } catch (error) {
+            console.log(error);
+            next(error);
         }
     }
     public async deleteOne(_id: string):Promise<void> {
@@ -53,22 +110,6 @@ class UserController {
         try {
             const users: Document = await getItems(this._DbCollection);
             return users;
-        } catch (error) {
-            console.log(error)
-            throw new ErrorHandler(error.statusCode, error.message);
-        }
-    }
-    public async signin(body:any) {
-        const { email, password } = body;
-        try {
-            const user:Document<any> = await findOne(this._DbCollection, {email: email});
-            if (user) {
-               const isPasswordCorrect = await bcrypt.compare(password, user.password);
-               console.log(isPasswordCorrect)
-            }
-            console.log(user);
-            return "s";
-            
         } catch (error) {
             console.log(error)
             throw new ErrorHandler(error.statusCode, error.message);
