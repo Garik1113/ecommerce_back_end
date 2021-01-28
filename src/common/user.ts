@@ -6,8 +6,7 @@ export const comparePasswords = (password: string, hashPassword: string) => bcry
 
 export const convertUserObjecttToDbFormat = (userObject: any): TUser => {
     const user: TUser = {
-        firstName: userObject.firstName,
-        lastName: userObject.lastName,
+        name: userObject.name,
         email: userObject.email,
         password: hashPassword(userObject.password),
         loggedIn: false
@@ -19,8 +18,7 @@ export const convertUserObjecttToDbFormat = (userObject: any): TUser => {
 export const convertDbUserToNormal = (dbUser: any): TUser => {
     const user: TUser = {
         _id: dbUser._id,
-        firstName: dbUser.firstName,
-        lastName: dbUser.lastName,
+        name: dbUser.name,
         email: dbUser.email,
         password: dbUser.password,
         loggedIn: dbUser.loggedIn

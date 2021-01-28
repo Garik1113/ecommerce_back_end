@@ -18,13 +18,13 @@ class UserController {
             text:`You'ave reached the ${this.constructor.name} default method`
         };
     };
-    async signup (req: Request, res: Response, next: NextFunction): Promise<void> {    
+    async signup (req: Request, res: Response, next: NextFunction): Promise<void> { 
         const errors: Result<ValidationError> = validationResult(req);
-        const userDb: TUser = convertUserObjecttToDbFormat(req.body);
         try {
             if(!errors.isEmpty()) {
                 throw new ErrorHandler(402, "Validation Error", errors.array());
             }
+            const userDb: TUser = convertUserObjecttToDbFormat(req.body);
             const existUser = await UserDb.findByEmail(userDb.email);
             if (existUser) {
                 throw new ErrorHandler(409, "User with that email is already exist");
@@ -34,7 +34,6 @@ class UserController {
                 res.status(200).json({ user });
             }
         } catch (error) {
-            console.log(error);
             next(error);
         }
     };

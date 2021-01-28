@@ -7,6 +7,7 @@ class CartDb {
 
     async creatCart(): Promise<Document> {
         const cart: Document = new Cart();
+        
         const m =  await cart.save();
         console.log(m)
         return cart;
@@ -21,7 +22,7 @@ class CartDb {
     }
     async addItemQuantityToCart (cartId: string, itemId: string) {
         console.log("ITEM _ID", itemId)
-      const cart = await Cart.updateOne(
+        const cart = await Cart.updateOne(
           {_id: cartId}, 
           {$set: {"items.$[].quantity": 800}},
           { arrayFilters: [ { "item": {_id: itemId}} ]}

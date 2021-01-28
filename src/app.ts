@@ -4,6 +4,7 @@ import ErrorHandler from './models/errorHandler';
 import MainRouter from './routers/mainRouter';
 import bodyParser from 'body-parser';
 import Database from './db/mongoDb';
+import cors from 'cors';
 
 dotenv.config({
     path: '.env'
@@ -24,12 +25,14 @@ const server = new Server();
  // support application/json type post data
 server.app.use(bodyParser.json());
 
+server.app.use(cors())
+
 //support application/x-www-form-urlencoded post data
 server.app.use(bodyParser.urlencoded({ extended: true }));
 
-server.app.use('/api', server.router);
+server.app.use('/', server.router);
 server.app.use((err: ErrorHandler, req: Request, res: Response, next: NextFunction) => {
-    res.status(err.statusCode || 500).json({
+    res.status(203).send({
         status: "error",
         statusCode: err.statusCode,
         message: err.message,

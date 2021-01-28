@@ -62,6 +62,17 @@ class CategoryController {
             throw new ErrorHandler(error.statusCode, error.message);
         }
     }
+    public async adminGetAllCategories(): Promise<TCategory[]> {
+        try {
+            const categories: TCategory[] = await CategoryDb.getCategories();
+            const formatedToNormalCategories:TCategory[] = categories.map(category => convertDbCategoryToNormal(category));
+
+            return formatedToNormalCategories;
+        } catch (error) {
+            console.log(error)
+            throw new ErrorHandler(error.statusCode, error.message);
+        }
+    }
 }
 
 export = new CategoryController();

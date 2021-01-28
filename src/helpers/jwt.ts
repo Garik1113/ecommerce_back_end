@@ -1,13 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt  from 'jsonwebtoken';
 import ErrorHandler from '../models/errorHandler';
+import config from 'config';
+
 
 export const generateTokenWithUserId = (_id: string): string => {
    return jwt.sign(JSON.stringify(_id), process.env.ACCESS_TOKEN || "");
 };
 
 export const jwtVerifyToken = (token: string) => {
-   return jwt.verify(token, process.env.ACCESS_TOKEN || "")
+     
 }
 
 export const getTokenFromRequest = (req: Request): string | undefined => {
@@ -22,15 +24,20 @@ export const getTokenFromRequest = (req: Request): string | undefined => {
 }
 export const verifyToken = (req: Request, res: Response, next: NextFunction): void => {
     const token: string | undefined = getTokenFromRequest(req);
-    if (!token) {
-        next(new ErrorHandler(403, "Token is not difined"))
-    } else {
-        try {
-            jwtVerifyToken(token);
-            next();
-       } catch (error) {
-           next(new ErrorHandler(401, "Invalid token"))
-       }
+    try {
+      if (!token) {
+         throw new ErrorHandler(403, "Token is not difined");
+      } else {
+            jwt.verify(token, config.get("ACCESS_SECRET_TOKEN"), (err: any, user: any) => {
+               if (user) {
+                  next()
+               } else {
+                  throw new ErrorHandler(403, "Invalid Token")
+               }
+            }) 
+      }
+    } catch (error) {
+         next(error);
     }
 }
 

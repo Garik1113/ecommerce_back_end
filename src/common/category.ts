@@ -2,7 +2,7 @@ import { TCategory } from '../types/category'
 
  export const convertCategoryObjectToDbFormat = (categoryObj:any):TCategory => {
     const category:TCategory = {
-        _id: categoryObj._id || "",
+        // _id: categoryObj._id || "",
         name: categoryObj.name || "",
         include_in_menu: categoryObj.include_in_menu || false
     }

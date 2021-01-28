@@ -19,7 +19,7 @@ class UserRouter {
 
     _configure() {
         this._router.post('/signup',  validateCreateUser(),  this._controller.signup);
-        this._router.post('/signin', validateSignin(), verifyToken,  this._controller.signin);
+        this._router.post('/signin', validateSignin(),  this._controller.signin);
         this._router.delete('/:_id', async (req: Request, res: Response, next: NextFunction):Promise<void> => {    
             try {
                 await this._controller.deleteOne(req.params._id);
