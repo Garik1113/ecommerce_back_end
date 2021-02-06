@@ -30,6 +30,7 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction): vo
       } else {
             jwt.verify(token, config.get("ACCESS_SECRET_TOKEN"), (err: any, user: any) => {
                if (user) {
+                  req.body.userId = String(user);
                   next()
                } else {
                   throw new ErrorHandler(403, "Invalid Token")

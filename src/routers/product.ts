@@ -2,6 +2,7 @@ import { NextFunction, Router, Request, Response } from "express";
 import ProductController from '../controllers/product';
 import { Document } from 'mongoose';
 import { TProduct } from "../types/product";
+import { verifyToken } from "../helpers/jwt";
 
 class ProductRouter {
     private _router: Router = Router();
@@ -15,57 +16,15 @@ class ProductRouter {
     }
 
     _configure() {
-        this._router.post('/', async (req: Request, res: Response, next: NextFunction):Promise<void> => {    
-            try {
-                const result = await this._controller.createProduct(req.body);
-                res.status(200).json(result);
-            } catch (error) {
-                next(error);
-            };
-        });
-        this._router.get('/:_id', async (req: Request, res: Response, next: NextFunction):Promise<void> => {
-            const { _id } = req.params;
-            try {
-                const product: TProduct = await this._controller.getProductById(_id);
-                res.status(200).json({ product });
-            } catch (error) {
-                next(error);
-            };
-        });
-        this._router.put('/:_id', async (req: Request, res: Response, next: NextFunction):Promise<void> => {
-            const { _id } = req.params;
-            try {
-                await this._controller.updateProduct( _id, req.body);
-                res.status(200).json({ status: "Updated" });
-            } catch (error) {
-                next(error);
-            };
-        });
-        this._router.delete('/:_id', async (req: Request, res: Response, next: NextFunction):Promise<void> => {    
-            try {
-                await this._controller.deleteProduct(req.params._id);
-                res.status(200).json({ status: "Deleted" });
-            } catch (error) {
-                next(error);
-            };
-        });
-        this._router.get('/categories/:_id', async (req: Request, res: Response, next: NextFunction):Promise<void> => {
-            const _id: String = req.params._id;
-            try {
-                const products: TProduct[] = await this._controller.getProductsByCategory(_id);
-                res.status(200).json({ products });
-            } catch (error) {
-                next(error);
-            };
-        });
-        this._router.get('/', async (req: Request, res: Response, next: NextFunction):Promise<void> => {
-            try {
-                const products: TProduct[] = await this._controller.getAllProducts();
-                res.status(200).json({ products });
-            } catch (error) {
-                next(error);
-            };
-        });
+        //Admin Routes
+        this._router.post('/admin', verifyToken, this._controller.createProduct);
+        this._router.get('/admin/get_products', verifyToken, this._controller.getAllProducts);
+        this._router.get('/admin/get_product/:_id', verifyToken, this._controller.getProductById);
+        this._router.put('/admin/update/:_id', verifyToken, this._controller.updateProduct);
+        this._router.get('/admin/products_by_category/:_id', verifyToken, this._controller.getProductsByCategory);
+        this._router.delete('/admin/:_id', verifyToken, this._controller.deleteProduct);
+        this._router.post('/admin/upload_product_image', verifyToken, this._controller.uploadImage);
+        this._router.post('/admin/values/upload_product_image', verifyToken, this._controller.uploadValueImage);
         
     }
 }

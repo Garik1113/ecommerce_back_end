@@ -51,6 +51,7 @@ class UserController {
             }
             if (comparePasswords(password, user.password)) {
                 const token: string = generateTokenWithUserId(userDb._id);
+                await UserDb.update(userDb._id, { loggedIn: true });
                 res.status(200).json({ token });
             } else {
                 throw new ErrorHandler(401, "Incorrect password");
@@ -66,6 +67,14 @@ class UserController {
         } catch (error) {
             console.log(error)
             throw new ErrorHandler(error.statusCode, error.message);
+        }
+    }
+    public async signOut (req: Request, res: Response, next: NextFunction):Promise<void> {
+        try {
+            await UserDb.update(req.body.userId, { loggedIn: false });
+            res.status(200).json({ok: "ok"});
+        } catch (error) {
+            next(error)
         }
     }
     public async updateOne(_id: string,  body: any):Promise<void> {

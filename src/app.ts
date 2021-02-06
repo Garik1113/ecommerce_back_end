@@ -1,14 +1,11 @@
-import dotenv from 'dotenv';
 import express, { Request, Response, NextFunction, Express } from 'express';
 import ErrorHandler from './models/errorHandler';
 import MainRouter from './routers/mainRouter';
 import bodyParser from 'body-parser';
 import Database from './db/mongoDb';
 import cors from 'cors';
-
-dotenv.config({
-    path: '.env'
-});
+import expressUpload from 'express-fileupload';
+import config from 'config';
 
 /** 
  * Express server application class.
@@ -25,7 +22,9 @@ const server = new Server();
  // support application/json type post data
 server.app.use(bodyParser.json());
 
-server.app.use(cors())
+server.app.use(cors());
+
+server.app.use(expressUpload())
 
 //support application/x-www-form-urlencoded post data
 server.app.use(bodyParser.urlencoded({ extended: true }));
@@ -42,7 +41,7 @@ server.app.use((err: ErrorHandler, req: Request, res: Response, next: NextFuncti
 
 
 
-(async (port = process.env.APP_PORT || 5000) => {
+(async (port = config.get("PORT") || 5000) => {
     await server.app.listen(port, () => console.log(`Listening on port ${port}`));
     await Database.connect();
 })();

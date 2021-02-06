@@ -18,6 +18,7 @@ class UserRouter {
     }
 
     _configure() {
+        this._router.put('/admin/signout', verifyToken,  this._controller.signOut);
         this._router.post('/signup',  validateCreateUser(),  this._controller.signup);
         this._router.post('/signin', validateSignin(),  this._controller.signin);
         this._router.delete('/:_id', async (req: Request, res: Response, next: NextFunction):Promise<void> => {    
