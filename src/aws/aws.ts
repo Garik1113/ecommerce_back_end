@@ -16,9 +16,9 @@ const s3Bucket = new Aws.S3({
 })
 
 export const uploadFile = (folder: string,  file: UploadedFile): string => {
-const randomNumber: number = Math.floor(Math.random() * 100 + Date.now());
-const fileName = randomNumber + file.name ; 
-   const data: any = {
+    const randomNumber: number = Math.floor(Math.random() * 100 + Date.now());
+    const fileName = randomNumber + file.name ; 
+    const data: any = {
         Key: `${folder}/${fileName}`,
         Body: file.data,
         ContentEncoding: 'base64',

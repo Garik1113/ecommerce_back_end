@@ -30,7 +30,7 @@ server.app.use(expressUpload())
 server.app.use(bodyParser.urlencoded({ extended: true }));
 
 server.app.use('/', server.router);
-server.app.use((err: ErrorHandler, req: Request, res: Response, next: NextFunction) => {
+server.app.use((err: ErrorHandler, req: Request, res: Response) => {
     res.status(203).send({
         status: "error",
         statusCode: err.statusCode,
@@ -40,8 +40,14 @@ server.app.use((err: ErrorHandler, req: Request, res: Response, next: NextFuncti
 });
 
 
+process.on("SIGINT", () => { console.log("exiting…"); process.exit(); });
 
-(async (port = config.get("PORT") || 5000) => {
+process.on("exit", () => { console.log("exiting…"); process.exit(); });
+
+const start = async () => {
+    const port = config.get("PORT") || 5000;
     await server.app.listen(port, () => console.log(`Listening on port ${port}`));
-    await Database.connect();
-})();
+    await Database.connect(); 
+};
+
+start();

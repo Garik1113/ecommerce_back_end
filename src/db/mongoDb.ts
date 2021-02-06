@@ -1,4 +1,4 @@
-import mongoose, { ConnectionOptions } from "mongoose";
+import mongoose from "mongoose";
 
 class Database {
     protected URI:string = "mongodb+srv://garik1319:Ga$1319759@cluster0.cm8bk.mongodb.net/<dbname>?retryWrites=true&w=majority";

@@ -1,10 +1,6 @@
-import { NextFunction, Router, Request, Response } from "express";
+import { Router } from "express";
 import CartController from '../controllers/cart';
-import { Document } from 'mongoose';
-import { TUser } from "../types/user";
-import { validateAddToCart, validateCreateUser, validateSignin } from "../helpers/validation";
-import { validationResult, check } from 'express-validator'
-import { verifyToken } from "../helpers/jwt";
+import { validateAddToCart } from "../helpers/validation";
 
 class CartRouter {
     private _router: Router = Router();
