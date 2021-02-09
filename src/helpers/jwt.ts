@@ -5,12 +5,8 @@ import config from 'config';
 
 
 export const generateTokenWithUserId = (_id: string): string => {
-   return jwt.sign(JSON.stringify(_id), process.env.ACCESS_TOKEN || "");
+   return jwt.sign(JSON.stringify(_id), config.get("ACCESS_SECRET_TOKEN"));
 };
-
-export const jwtVerifyToken = (token: string) => {
-     
-}
 
 export const getTokenFromRequest = (req: Request): string | undefined => {
    const tokenInHeader: any = req.header("Authorization");

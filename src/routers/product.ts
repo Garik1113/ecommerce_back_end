@@ -1,8 +1,7 @@
-import { NextFunction, Router, Request, Response } from "express";
+import { Router } from "express";
 import ProductController from '../controllers/product';
-import { Document } from 'mongoose';
-import { TProduct } from "../types/product";
 import { verifyToken } from "../helpers/jwt";
+
 
 class ProductRouter {
     private _router: Router = Router();
@@ -23,8 +22,10 @@ class ProductRouter {
         this._router.put('/admin/update/:_id', verifyToken, this._controller.updateProduct);
         this._router.get('/admin/products_by_category/:_id', verifyToken, this._controller.getProductsByCategory);
         this._router.delete('/admin/:_id', verifyToken, this._controller.deleteProduct);
-        this._router.post('/admin/upload_product_image', verifyToken, this._controller.uploadImage);
-        this._router.post('/admin/values/upload_product_image', verifyToken, this._controller.uploadValueImage);
+        this._router.post('/admin/upload_image', verifyToken, this._controller.uploadImage);
+        //Customer Routes
+        this._router.get('/get_products/:_id', this._controller.getProductsByCategory);
+        this._router.get('/get_product/:_id', this._controller.getProductById);
         
     }
 }

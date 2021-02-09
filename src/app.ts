@@ -30,7 +30,7 @@ server.app.use(expressUpload())
 server.app.use(bodyParser.urlencoded({ extended: true }));
 
 server.app.use('/', server.router);
-server.app.use((err: ErrorHandler, req: Request, res: Response) => {
+server.app.use((err: ErrorHandler, req: Request, res: Response, next: NextFunction) => {
     res.status(203).send({
         status: "error",
         statusCode: err.statusCode,

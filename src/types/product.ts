@@ -8,14 +8,21 @@ export type Discount = {
     value: number
 }
 
+export type Image = {
+    thumbnail_image: string,
+    small_image: string,
+    main_image: string
+}
+
 export type AttributeValue = {
-    valueId: string,
-    label: string
+    id: Number,
+    label: String,
+    images: Image[]
 }
 
 export type Attribute = {
-    attrbuteId: string,
-    label: string,
+    id: Number,
+    label: String,
     values: AttributeValue[]
 }
 
@@ -29,5 +36,5 @@ export type TProduct = {
     averageRating: number,
     categories: string[],
     attributes: Attribute[],
-    images: string[]
+    images: Image[]
 };

@@ -21,14 +21,38 @@ const ProductSchema: Schema = new Schema({
     price: Schema.Types.Map,
     discount: Schema.Types.Map,
     averageRating: Number,
-    attributes: [Schema.Types.Map],
+    attributes: [
+        {
+            id: Number,
+            label: String,
+            values: [
+                {
+                    id: Number,
+                    label: String,
+                    images: [
+                        {
+                            thumbnail_image: String,
+                            small_image: String,
+                            main_image: String
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
     categories: [
         {
             type: Schema.Types.ObjectId,
             ref: "Category"
         }
     ],
-    images: [String]
+    images: [
+        {
+            thumbnail_image: String,
+            small_image: String,
+            main_image: String
+        }
+    ]
 });
 
 export default model<IProduct>('Product', ProductSchema);

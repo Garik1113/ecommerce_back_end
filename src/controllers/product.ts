@@ -42,7 +42,7 @@ class ProductController {
         const { _id } = req.params;
         const { body } = req;
         try {
-            await ProductDb.updateProduct(_id, body);
+            await ProductDb.updateProduct(_id, convertProductObjectToDbFormat(body));
             res.status(200).json({ status: "Updated" });
         } catch (error) {
             next(error) 
@@ -61,8 +61,7 @@ class ProductController {
         const { _id } = req.params;
         try {
             const documents: Document[] = await ProductDb.getProductsByCategory(_id);
-            const products: TProduct[] = documents.map(document => convertDbProductToNormal(document));
-
+            const products: TProduct[] = documents.map(convertDbProductToNormal);
             res.status(200).json({ products });
         } catch (error) {
             next(error)
@@ -82,25 +81,11 @@ class ProductController {
         try {
             if (req.files) {
                 if(req.files.image) {
-                    const fileName: string = await uploadFile('products', req.files.image as UploadedFile);
+                    const fileName: string = await uploadFile("products", req.files.image as UploadedFile);
                     res.status(200).json({ fileName })
                 }
             } else {
                 throw new ErrorHandler(309, "Image not found");
-            }
-        } catch (error) {
-            next(error)
-        }
-    }
-    public async uploadValueImage(req: Request, res: Response, next: NextFunction):Promise<void> {
-        try {
-            if (req.files) {
-                if (req.files.image) {
-                    const fileName: string = await uploadFile('products/values', req.files.image as UploadedFile);
-                    res.status(200).json({ fileName })
-                }
-            } else {
-                throw new ErrorHandler(309, "Image not found")
             }
         } catch (error) {
             next(error)

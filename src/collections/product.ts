@@ -49,7 +49,7 @@ class ProductDb {
         }
     }
     async getProductsByCategory (_id: String): Promise<Document[]> {
-        const items: Document[] = await this._db.find({category_id: _id});
+        const items: Document[] = await this._db.find({categories: _id});
         return items;
     }
     async getAllProducts ():Promise<Document[]> {
