@@ -1,4 +1,4 @@
-import { Attribute, AttributeValue, Image, TProduct } from '../types/product';
+import { Attribute, AttributeValue, Image, TProduct, TAttributeData } from '../types/product';
 
 const makeImageReadyForDb = (images: string[] = []):Image[] => {
     return images.map((image) => {
@@ -30,6 +30,7 @@ const makeAttributeReadyForDb = (attributes: any[] = []): Attribute[] => {
     const product: TProduct = {
         name: productObj.name || "",
         pageTitle: productObj.pageTitle || "",
+        description: productObj.description || "",
         metaDescription: productObj.metaDescription,
         attributes: makeAttributeReadyForDb(productObj.attributes) || [],
         price: productObj.price || {},
@@ -46,7 +47,8 @@ export const convertDbProductToNormal = (productDb: any):TProduct => {
         _id: productDb._id,
         name: productDb.name || "",
         pageTitle: productDb.pageTitle || "",
-        metaDescription: productDb.metaDescription,
+        description: productDb.description || "",
+        metaDescription: productDb.metaDescription || "",
         attributes: productDb.attributes || [],
         price: productDb.price || {},
         discount: productDb.discount || {},
@@ -55,4 +57,18 @@ export const convertDbProductToNormal = (productDb: any):TProduct => {
         images: productDb.images || []
     }
     return product;
+}
+
+export const getMatchingVariantsOfAttribute = (attributeData: TAttributeData[], product: TProduct): Attribute[] => {
+    const { attributes } = product;
+    const newAttributes: Attribute[] = attributeData.reduce((state: Attribute[], current:TAttributeData):Attribute[] => {
+        const currentAttr: Attribute | undefined = attributes.find(e => e.id == current.attributeId);
+        if (currentAttr) {
+           const filteredValueArr: AttributeValue[] = currentAttr.values.filter(val => val.id == current.valueId);
+           currentAttr.values = filteredValueArr;
+           state.push(currentAttr);
+        }
+        return state;
+    }, []);
+    return newAttributes;
 }

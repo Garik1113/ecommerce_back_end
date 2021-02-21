@@ -6,13 +6,20 @@ export interface ICart extends Document {
     _id?: string,
     items?: TCartItem[],
     paymentMethod: string,
-    shippingAddress: TAddress[]
+    shippingAddress: TAddress,
+    billingAddress: TAddress
 };
 
 const CartSchema:Schema = new Schema({
-    items: { type: Array },
+    items:  [
+        { 
+            item: { type: {} },
+            quantity: { type: Number }
+        }
+    ],
     paymentMethod: { type: String },
-    shippingAddress: { type: {} }
+    shippingAddress: { type: {} },
+    billingAddress: { type: {} }
 });
 
 export default model<ICart>('Cart', CartSchema);

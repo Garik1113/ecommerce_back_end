@@ -4,11 +4,12 @@ import CartDb from '../collections/cart';
 import { Result, ValidationError, validationResult } from 'express-validator';
 import { NextFunction, Request, Response } from 'express';
 import { TCart, TCartItem } from "../types/cart";
-import { convertDbCartToNormal, getCartId } from "../common/cart";
+import { convertDbCartToNormal } from "../common/cart";
 import ProductDB from "../collections/product";
-import { TProduct } from "../types/product";
-import { convertDbProductToNormal } from "../common/product";
+import { Attribute, TProduct } from "../types/product";
+import { convertDbProductToNormal, getMatchingVariantsOfAttribute } from "../common/product";
 import { validateObjectId } from "../common/db";
+import { isArraysEqual } from "../helpers/isArraysEqual";
 
 class CartController {
     defaulMethod() {
@@ -19,8 +20,8 @@ class CartController {
 
     public async createCart(req: Request, res: Response, next: NextFunction):Promise<void> {
         try {
-            const cart: Document = await CartDb.creatCart();
-            const cartId: String = getCartId(cart);
+            const cart: Document = await CartDb.creatCart({});
+            const cartId: String = cart._id;
             res.status(200).json({ cartId });
         } catch (error) {
             next(error);
@@ -29,39 +30,46 @@ class CartController {
     public async addItemToCart(req: Request, res: Response, next: NextFunction):Promise<void> {
         const errors: Result<ValidationError> = validationResult(req);
         try {
-            console.log(req.body)
-            const { cartId, itemId, quantity } = req.body;
+            const { cartId, itemId, quantity, attributes } = req.body;
             if (!errors.isEmpty()) {
-               
                 throw new ErrorHandler(403, "Validation error", errors.array())
             }
             validateObjectId(itemId);
             const product: Document = await ProductDB.getProductById(itemId);
-            if (!product){
+            if (!product) {
                 throw new ErrorHandler(403, "Product that you tried to add is not exists")
             } else {
-                    const item: TProduct = convertDbProductToNormal(product);
-                    const cartItem: TCartItem = {
-                        quantity,
-                        item
-                    }
-                    const cartObj: Document = await CartDb.getCart(cartId);
-                    const cart: TCart = convertDbCartToNormal(cartObj);
-                    const { items } = cart;
-                    items?.map( async (cartItem: TCartItem) => {
-                        if (cartItem.item._id == itemId) {
-                            cartItem.quantity += 1;
-                            await CartDb.addItemQuantityToCart(cartId, itemId)
-                        }
-                    });
-                    // await CartDb.addItemToCart(cartId, cartItem);
+                const item: TProduct = convertDbProductToNormal(product);
+                const attributesWithSelectedVariants: Attribute[] = getMatchingVariantsOfAttribute(attributes, item);
+                const cartItem: TCartItem = {
+
+                    quantity,
+                    item: { ...item, attributes: attributesWithSelectedVariants }
                 }
-            // console.log(ObjectID(itemId))
-            // const product: Document = await ProductDB.getProductById(itemId);
-            
-            // const cart: Document = CartDb.getCart(cartId);
-            // await CartDb.getItemFromCart(cartId, itemId);
-            // await CartDb.addItemToCart(cartId, cartItem);
+                const cartObj: any = await CartDb.getCart(cartId);
+                if (!cartObj) {
+                    const cart: TCart = {
+                        items: [cartItem],
+                    }
+                    const cartDb: Document = await CartDb.creatCart(cart);
+                    res.status(200).json({ cartId: cartDb._id });
+                } else {
+                    const existingItem = convertDbCartToNormal(cartObj).items?.filter((cartItem: any) => cartItem.item._id == itemId).pop();
+                    if (existingItem) {
+                        const existing = cartObj.items?.filter((cartItem: any) => cartItem.item._id == itemId).pop();
+                        const isEqaulAttributes:boolean = isArraysEqual(existingItem.item.attributes, attributesWithSelectedVariants);
+                        if (isEqaulAttributes) {
+                            await CartDb.addItemQuantityToCart(cartId, existing._id);
+                        } else {
+                            await CartDb.addItemToCart(cartId, cartItem);
+                        }
+                        res.status(200).json({ cartId });
+                    } else {
+                        await CartDb.addItemToCart(cartId, cartItem);
+                        res.status(200).json({ cartId });
+                    }
+                }
+            }
         } catch (error) {
             next(error);
         }

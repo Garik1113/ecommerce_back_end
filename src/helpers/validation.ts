@@ -15,10 +15,27 @@ export const validateSignin = () => {
     ]
 }
 
+export const validateCreateCustomer = () => {
+    return [ 
+        body('firstName', 'First name is Required').exists(),
+        body('lastName', 'Last name is Required').exists(),
+        body('email', 'Invalid email').exists().isEmail(),
+        body('password', "Password is required")
+    ];
+}
+
+export const validateCustomerSignin = () => {
+    return [
+        body('email', 'Invalid email').exists().isEmail(),
+        body('password', "Password is required").exists()
+    ]
+}
+
+
 export const validateAddToCart = () => {
     return [
         body('itemId', 'itemId was not provided').exists(),
-        body('cartId', 'cartId was not provided').exists(),
+        // body('cartId', 'cartId was not provided').exists(),
         body('quantity', 'quantity was not provided').exists()
     ]
 }

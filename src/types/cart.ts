@@ -9,7 +9,7 @@ export type TCartItem = {
 export type TCart = {
     _id?: string,
     items?: TCartItem[],
-    paymentMethod: string,
-    shippingAddress: TAddress[],
+    paymentMethod?: string,
+    shippingAddress?: TAddress,
     userId?: string
 }

@@ -8,6 +8,11 @@ export const generateTokenWithUserId = (_id: string): string => {
    return jwt.sign(JSON.stringify(_id), config.get("ACCESS_SECRET_TOKEN"));
 };
 
+export const generateTokenWithCustomerId = (_id: string): string => {
+   return jwt.sign(JSON.stringify(_id), config.get("CUSTOMER_SECRET_TOKEN"));
+};
+
+
 export const getTokenFromRequest = (req: Request): string | undefined => {
    const tokenInHeader: any = req.header("Authorization");
    try {
@@ -38,3 +43,22 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction): vo
     }
 }
 
+export const verifyCustomerToken = (req: Request, res: Response, next: NextFunction): void => {
+   const token: string | undefined = getTokenFromRequest(req);
+   try {
+      if (!token) {
+        throw new ErrorHandler(403, "Token is not difined");
+      } else {
+            jwt.verify(token, config.get("CUSTOMER_SECRET_TOKEN"), (err: any, customerId: any) => {
+               if (customerId) {
+                  req.body.customerId = customerId;
+                  next()
+               } else {
+                  throw new ErrorHandler(403, "Invalid Token")
+               }
+            }) 
+     }
+   } catch (error) {
+         next(error);
+   }
+}

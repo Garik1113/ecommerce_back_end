@@ -1,14 +1,11 @@
-import { NextFunction, Router, Request, Response } from "express";
-import UserController from '../controllers/user';
-import { Document } from 'mongoose';
-import { TUser } from "../types/user";
-import { validateCreateUser, validateSignin } from "../helpers/validation";
-import { validationResult, check } from 'express-validator'
-import { verifyToken } from "../helpers/jwt";
+import { Router} from "express";
+import CustomerController from '../controllers/customer';
+import { validateCreateCustomer, validateCustomerSignin } from "../helpers/validation";
+import { verifyCustomerToken } from "../helpers/jwt";
 
-class UserRouter {
+class CustomerRouter {
     private _router: Router = Router();
-    private _controller = UserController;
+    private _controller = CustomerController;
     get router () {
         return this._router;
     }
@@ -18,10 +15,12 @@ class UserRouter {
     }
 
     _configure() {
-        this._router.put('/admin/signout', verifyToken,  this._controller.signOut);
-        this._router.post('/admin/signup',  validateCreateUser(),  this._controller.signup);
-        this._router.post('/admin/signin', validateSignin(),  this._controller.signin);
-        // this._router.delete('admin/:_id', async (req: Request, res: Response, next: NextFunction):Promise<void> => {    
+        this._router.post('/signup',  validateCreateCustomer(),  this._controller.signup);
+        this._router.post('/signin', validateCustomerSignin(),  this._controller.signin);
+        this._router.put('/signout', verifyCustomerToken,  this._controller.signOut);
+
+
+        // this._router.delete('/:_id', async (req: Request, res: Response, next: NextFunction):Promise<void> => {    
         //     try {
         //         await this._controller.deleteOne(req.params._id);
         //         res.status(200).json({ status: "Deleted" });
@@ -58,4 +57,4 @@ class UserRouter {
     }
 }
 
-export = new UserRouter().router;
+export = new CustomerRouter().router;

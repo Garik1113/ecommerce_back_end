@@ -26,10 +26,16 @@ export type Attribute = {
     values: AttributeValue[]
 }
 
+export type TAttributeData = {
+    attributeId: number,
+    valueId: number
+}
+
 export type TProduct = {
     _id?: string,
     name: string,
     pageTitle: string,
+    description: string,
     metaDescription: string,
     price: Price,
     discount: Discount,
