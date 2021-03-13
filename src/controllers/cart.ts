@@ -162,8 +162,6 @@ class CartController {
                 throw new ErrorHandler(203, "Cart not found");
             }
             const cart:ICartDb = convertDbCartToNormal(result);
-
-            console.log(address)
             await CartDb.updateCart(cartId, {...cart, shippingAddress})
             res.status(200).json({ cartId });
         } catch (error) {
@@ -179,8 +177,6 @@ class CartController {
                 throw new ErrorHandler(203, "Cart not found");
             }
             const cart:ICartDb = convertDbCartToNormal(result);
-
-            console.log(address)
             await CartDb.updateCart(cartId, {...cart, billingAddress})
             res.status(200).json({ cartId });
         } catch (error) {
@@ -201,7 +197,15 @@ class CartController {
             next(error);
         }
     }
-
+    public async removeCart(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const { cartId } = req.body;
+        try {
+           await CartDb.removeCart(cartId);
+           res.status(200).json({ status: "OK" })
+        } catch (error) {
+            next(error)
+        }
+    }
 }
 
 export = new CartController();

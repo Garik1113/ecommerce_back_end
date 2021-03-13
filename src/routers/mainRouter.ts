@@ -3,8 +3,9 @@ import CategoryRouter from './category';
 import ProductRouter from './product';
 import UserRouter from './user';
 import CartRouter from './cart';
-import bannerRouter from './banner';
+import BannerRouter from './banner';
 import CustomerRouter from './customer';
+import OrderRouter from './order';
 
 class MainRouter {
     private _router = Router();
@@ -12,9 +13,10 @@ class MainRouter {
     private _subRouterProduct = ProductRouter;
     private _subRouterUser = UserRouter;
     private _subRouterCart = CartRouter;
-    private _subRouterBanner = bannerRouter;
+    private _subRouterBanner = BannerRouter;
     private _subRouterCustomer = CustomerRouter;
-    
+    private _subRouterOrder = OrderRouter;
+
     get router() {
         return this._router;
     }
@@ -30,6 +32,7 @@ class MainRouter {
         this._router.use('/cart', this._subRouterCart);
         this._router.use('/banners', this._subRouterBanner);
         this._router.use('/customers', this._subRouterCustomer);
+        this._router.use('/orders', this._subRouterOrder);
     }
 }
 

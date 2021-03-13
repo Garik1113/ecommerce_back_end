@@ -8,6 +8,8 @@ import expressUpload from 'express-fileupload';
 import config from 'config';
 import { getTokenFromRequest } from './helpers/jwt';
 import jwt  from 'jsonwebtoken';
+import Stripe from 'stripe';
+const stripe: Stripe = require('stripe')("sk_test_51HPTvgB9AM6FXiSYbUwoiPaWX2zDSwVc7dYCEv70AHU7y5hrowWbkO5pdUyFfmlf00PM1CxOw9azGLDXSD6z1qIu00IEozmq5c");
 
 /** 
  * Express application class.
@@ -31,6 +33,18 @@ app.use(expressUpload())
 
 //support application/x-www-form-urlencoded post data
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use("/stripe/payment", async(req: Request, res: Response) => {
+    const {id, amount} = req.body;
+    const payment = await stripe.paymentIntents.create({
+        amount,
+        currency: "USD",
+        description: "My shop description",
+        payment_method: id
+    })
+    res.json({
+        message: "OK"
+    })
+})
 app.use("*", async(req: Request, res: Response, next: NextFunction) => {
     const token: string | undefined = getTokenFromRequest(req);
     let customer = false;

@@ -52,8 +52,11 @@ class CartDb {
             }
         );
     }
-    async deleteCartItem (cartId: string, itemId: string) {
+    async deleteCartItem (cartId: string, itemId: string):Promise<void> {
         await Cart.updateOne({ _id: cartId}, { $pull: { "items": { "_id": itemId } } });
+    }
+    async removeCart (cartId: string):Promise<void> {
+        await Cart.findByIdAndDelete(cartId);
     }
 }
 

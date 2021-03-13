@@ -28,6 +28,7 @@ export const convertDbCartToNormal = (cartObj: any = {}): ICartDb => {
         items: cartObj.items || [],
         paymentMethod: cartObj.paymentMethod,
         shippingAddress: cartObj.shippingAddress,
+        billingAddress: cartObj.billingAddress,
         userId: cartObj.userId,
         totalPrice: getTotalPriceOfItems(cartObj.items),
         totalQty: getTotalQtyOfItems(cartObj.items)

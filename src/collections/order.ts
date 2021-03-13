@@ -1,17 +1,17 @@
 import isEmpty from "lodash/isEmpty";
 import { Model, Document } from "mongoose";
-import Banner, { IBanner } from "../models/banner";
-import { TBanner } from '../types/banner';
+import Order, { IOrder } from "../models/order";
+import { IOrderInput } from '../types/order';
 
 
-class BannerDb {
-    protected _db: Model<IBanner> = Banner;
+class OrderDb {
+    protected _db: Model<IOrder> = Order;
     get db () {
         return this._db;
     };
 
-    async createBanner(banner: TBanner):Promise<Document> {
-        const document: Document = await this.db.create(banner);
+    async placeOrder(order: IOrderInput):Promise<Document> {
+        const document: Document = await this.db.create(order);
         return document;
     }
     async getBannerById(_id: String):Promise<Document> {
@@ -41,4 +41,4 @@ class BannerDb {
     }
 }
 
-export default new BannerDb();
+export default new OrderDb();
