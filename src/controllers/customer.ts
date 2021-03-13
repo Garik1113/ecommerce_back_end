@@ -27,7 +27,7 @@ class CustomerController {
             if (existCustomer) {
                 throw new ErrorHandler(409, "Customer with that email is already exist");
             } else {
-                const cart: Document = await CartDb.creatCart({});
+                const cart: Document = await CartDb.creatCart(null);
                 const cartId: String = cart._id;
                 const customerDoc: Document = await CustomerDb.createCustomer({...customerDb, cartId });
                 const customer: TCustomer =  convertDbCustomerToNormal(customerDoc);

@@ -5,5 +5,9 @@ export type TAddress = {
     state?: string,
     city: string,
     street?: string,
-    phone?: string
+    phone: string,
+    zip: number,
+    firstAddress: string,
+    secondAddress?: string,
+    company?: string
 }

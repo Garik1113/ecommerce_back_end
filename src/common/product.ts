@@ -1,4 +1,5 @@
-import { Attribute, AttributeValue, Image, TProduct, TAttributeData } from '../types/product';
+import { TCartItemAttribute } from '../types/cart';
+import { Attribute, AttributeValue, Image, IProduct, IProductDb, TAttributeData, TPrice } from '../types/product';
 
 const makeImageReadyForDb = (images: string[] = []):Image[] => {
     return images.map((image) => {
@@ -26,8 +27,8 @@ const makeAttributeReadyForDb = (attributes: any[] = []): Attribute[] => {
     })
 }
 
- export const convertProductObjectToDbFormat = (productObj: any):TProduct => {
-    const product: TProduct = {
+ export const convertProductObjectToDbFormat = (productObj: any):IProduct => {
+    const product: IProduct = {
         name: productObj.name || "",
         pageTitle: productObj.pageTitle || "",
         description: productObj.description || "",
@@ -37,13 +38,14 @@ const makeAttributeReadyForDb = (attributes: any[] = []): Attribute[] => {
         discount: productObj.discount || {},
         averageRating: productObj.averageRating || 1,
         categories: productObj.categories || [],
-        images: makeImageReadyForDb(productObj.images) || []
+        images: makeImageReadyForDb(productObj.images) || [],
+        quantity: productObj.quantity || 0
     }
     return product;
 }
 
-export const convertDbProductToNormal = (productDb: any):TProduct => {
-    const product: TProduct = {
+export const convertDbProductToNormal = (productDb: any):IProductDb => {
+    const product: IProductDb = {
         _id: productDb._id,
         name: productDb.name || "",
         pageTitle: productDb.pageTitle || "",
@@ -54,21 +56,19 @@ export const convertDbProductToNormal = (productDb: any):TProduct => {
         discount: productDb.discount || {},
         averageRating: productDb.averageRating || 1,
         categories: productDb.categories || [],
-        images: productDb.images || []
+        images: productDb.images || [],
+        quantity: productDb.quantity || 0
     }
     return product;
 }
 
-export const getMatchingVariantsOfAttribute = (attributeData: TAttributeData[], product: TProduct): Attribute[] => {
-    const { attributes } = product;
-    const newAttributes: Attribute[] = attributeData.reduce((state: Attribute[], current:TAttributeData):Attribute[] => {
-        const currentAttr: Attribute | undefined = attributes.find(e => e.id == current.attributeId);
-        if (currentAttr) {
-           const filteredValueArr: AttributeValue[] = currentAttr.values.filter(val => val.id == current.valueId);
-           currentAttr.values = filteredValueArr;
-           state.push(currentAttr);
-        }
-        return state;
-    }, []);
-    return newAttributes;
+export const isProductConfigurable = (product: IProduct):boolean => {
+    return product.attributes.length > 0;
+}
+
+export const getTotalPriceOfProduct = (product: IProductDb, quantity: number): TPrice => {
+    return {
+        currency: product.price.currency,
+        value: product.price.value * quantity
+    }
 }

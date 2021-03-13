@@ -15,34 +15,14 @@ class CartRouter {
     }
 
     _configure() {
-        this._router.post('/create', this._controller.createCart);
-        this._router.put('/add_item', validateAddToCart(), this._controller.addItemToCart);
-        // this._router.delete('/:_id', async (req: Request, res: Response, next: NextFunction):Promise<void> => {    
-        //     try {
-        //         await this._controller.deleteOne(req.params._id);
-        //         res.status(200).json({ status: "Deleted" });
-        //     } catch (error) {
-        //         next(error);
-        //     };
-        // });
-        // this._router.put('/:_id', async (req: Request, res: Response, next: NextFunction):Promise<void> => {
-        //     const { _id } = req.params;
-        //     try {
-        //         await this._controller.updateOne( _id, req.body);
-        //         res.status(200).json({ status: "Updated" });
-        //     } catch (error) {
-        //         next(error);
-        //     };
-        // });
-        // this._router.get('/:_id', async (req: Request, res: Response, next: NextFunction):Promise<void> => {
-        //     const { _id } = req.params;
-        //     try {
-        //         const user: Document = await this._controller.getOne(_id);
-        //         res.status(200).json({ user });
-        //     } catch (error) {
-        //         next(error);
-        //     };
-        // });
+        this.router.post('/create', this._controller.createCart);
+        this.router.put('/add_item', validateAddToCart(), this._controller.addItemToCart);
+        this.router.put('/delete', this._controller.deleteCartItem);
+        this.router.put('/quantity', this._controller.changeCartItemQuantity);
+        this.router.get('/:cartId', this._controller.getCart);
+        this.router.put('/add-shipping-address', this._controller.addShippingAddress)
+        this.router.put('/add-billing-address', this._controller.addBillingAddress)
+        this.router.put('/add-payment-method', this._controller.addPaymentMethod)
         
     }
 }

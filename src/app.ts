@@ -10,7 +10,7 @@ import { getTokenFromRequest } from './helpers/jwt';
 import jwt  from 'jsonwebtoken';
 
 /** 
- * Express server application class.
+ * Express application class.
  * @description Will later contain the routing system
 */
 
@@ -19,18 +19,19 @@ class Server {
     public router = MainRouter;
 };
 
-const server = new Server();
-
+// const = new Server();
+const app: Express = express();
+const router = MainRouter;
  // support application/json type post data
-server.app.use(bodyParser.json());
+app.use(bodyParser.json());
 
-server.app.use(cors());
+app.use(cors());
 
-server.app.use(expressUpload())
+app.use(expressUpload())
 
 //support application/x-www-form-urlencoded post data
-server.app.use(bodyParser.urlencoded({ extended: true }));
-server.app.use("*", async(req: Request, res: Response, next: NextFunction) => {
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use("*", async(req: Request, res: Response, next: NextFunction) => {
     const token: string | undefined = getTokenFromRequest(req);
     let customer = false;
     let user = false;
@@ -68,8 +69,8 @@ server.app.use("*", async(req: Request, res: Response, next: NextFunction) => {
     // console.log(req.headers);
     next()
 })
-server.app.use('/', server.router);
-server.app.use((err: ErrorHandler, req: Request, res: Response, next: NextFunction) => {
+app.use('/', router);
+app.use((err: ErrorHandler, req: Request, res: Response, next: NextFunction) => {
     res.status(203).send({
         status: "error",
         statusCode: err.statusCode,
@@ -80,7 +81,7 @@ server.app.use((err: ErrorHandler, req: Request, res: Response, next: NextFuncti
 
 const start = async () => {
     const port = config.get("PORT") || 5000;
-    await server.app.listen(port, () => console.log(`Listening on port ${port}`));
+    await app.listen(port, () => console.log(`Listening on port ${port}`));
     await Database.connect(); 
 };
 

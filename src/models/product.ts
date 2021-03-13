@@ -1,12 +1,12 @@
 import { Schema, Document, model } from 'mongoose';
-import { Price, Discount, Attribute } from '../types/product'
+import { TPrice, Discount, Attribute } from '../types/product'
 
 
 export interface IProduct extends Document {
     name: string,
     pageTitle: string,
     metaDescription: string,
-    price: Price,
+    price: TPrice,
     discount: Discount,
     averageRating: number,
     categories: string[],
@@ -14,12 +14,19 @@ export interface IProduct extends Document {
     images: string[]
 };
 
+export interface IProductDb extends IProduct {
+    _id: string
+}
+
 const ProductSchema: Schema = new Schema({
     name: { type: String, required: true },
     pageTitle: String,
     description: String,
     metaDescription: String,
-    price: Schema.Types.Map,
+    price: {
+        currency: { type: String },
+        value: { type: Number }
+    },
     discount: Schema.Types.Map,
     averageRating: Number,
     attributes: [
@@ -53,7 +60,8 @@ const ProductSchema: Schema = new Schema({
             small_image: String,
             main_image: String
         }
-    ]
+    ],
+    quantity: { type: Number, default: 0 }
 });
 
-export default model<IProduct>('Product', ProductSchema);
+export default model<IProduct | IProductDb>('Product', ProductSchema);

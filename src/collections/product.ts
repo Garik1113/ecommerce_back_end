@@ -2,7 +2,7 @@ import { Model, Document } from "mongoose";
 import ErrorHandler from "../models/errorHandler";
 const ObjectID = require('mongodb').ObjectID;
 import Product from "../models/product";
-import { TProduct } from "../types/product";
+import { IProduct } from "../types/product";
 
 
 class ProductDb {
@@ -25,7 +25,7 @@ class ProductDb {
         }
         
     }
-    async updateProduct (_id: string, body: any):Promise<TProduct | any> {
+    async updateProduct (_id: string, body: any):Promise<IProduct | any> {
         try {
             const filter = {"_id": ObjectID(_id)};
             const updateQuery:any = {};

@@ -1,8 +1,8 @@
 import { Model, Document } from "mongoose";
 import { convertDbProductToNormal, convertProductObjectToDbFormat } from "../common/product";
 import ErrorHandler from "../models/errorHandler";
-import Product, { IProduct } from "../models/product";
-import { TProduct } from "../types/product";
+import Product from "../models/product";
+import { IProduct, IProductDb } from "../types/product";
 import ProductDb from '../collections/product';
 import { NextFunction, Request, Response } from "express";
 import { uploadFile } from "../aws/aws";
@@ -15,25 +15,25 @@ class ProductController {
             text:`You'ave reached the ${this.constructor.name} default method`
         };
     };
-    public async createProduct(req: Request, res: Response, next: NextFunction):Promise<TProduct | any> {
+    public async createProduct(req: Request, res: Response, next: NextFunction):Promise<IProduct | any> {
         try {
             const productObject: any = req.body;
-            const readyForDbProduct: TProduct = convertProductObjectToDbFormat(productObject);
+            const readyForDbProduct: IProduct = convertProductObjectToDbFormat(productObject);
             const productDb: Document = await ProductDb.createProduct(readyForDbProduct);
-            const product: TProduct = convertDbProductToNormal(productDb);
+            const product: IProductDb = convertDbProductToNormal(productDb);
 
             res.status(200).json({product})
         } catch (error) {
             next(error);
         }
     }
-    public async getProductById(req: Request, res: Response, next: NextFunction):Promise<TProduct | any> {
+    public async getProductById(req: Request, res: Response, next: NextFunction):Promise<IProduct | any> {
         const {_id} = req.params;
         try {
             const document: Document = await ProductDb.getProductById(_id);
-            const product: TProduct = convertDbProductToNormal(document);
+            const product: IProductDb = convertDbProductToNormal(document);
 
-            res.status(200).json({product})
+            res.status(200).json({ product })
         } catch (error) {
             next(error)
         }
@@ -57,20 +57,20 @@ class ProductController {
             next(error);
         }
     }
-    public async getProductsByCategory(req: Request, res: Response, next: NextFunction):Promise<TProduct[] | any> {
+    public async getProductsByCategory(req: Request, res: Response, next: NextFunction):Promise<IProduct[] | any> {
         const { _id } = req.params;
         try {
             const documents: Document[] = await ProductDb.getProductsByCategory(_id);
-            const products: TProduct[] = documents.map(convertDbProductToNormal);
+            const products: IProductDb[] = documents.map(convertDbProductToNormal);
             res.status(200).json({ products });
         } catch (error) {
             next(error)
         }
     }
-    public async getAllProducts(req: Request, res: Response, next: NextFunction):Promise<TProduct[] | any> {
+    public async getAllProducts(req: Request, res: Response, next: NextFunction):Promise<IProduct[] | any> {
         try {
             const documents: Document[] = await ProductDb.getAllProducts();
-            const products: TProduct[] = documents.map(document => convertDbProductToNormal(document));
+            const products: IProductDb[] = documents.map(document => convertDbProductToNormal(document));
             
             res.status(200).json({ products });
         } catch (error) {

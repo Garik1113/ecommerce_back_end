@@ -34,8 +34,7 @@ export const validateCustomerSignin = () => {
 
 export const validateAddToCart = () => {
     return [
-        body('itemId', 'itemId was not provided').exists(),
-        // body('cartId', 'cartId was not provided').exists(),
+        body('productId', 'productId was not provided').exists(),
         body('quantity', 'quantity was not provided').exists()
     ]
 }

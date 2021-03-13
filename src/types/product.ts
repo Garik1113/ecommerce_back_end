@@ -1,4 +1,4 @@
-export type Price = {
+export type TPrice = {
     currency: string,
     value: number
 }
@@ -31,16 +31,20 @@ export type TAttributeData = {
     valueId: number
 }
 
-export type TProduct = {
-    _id?: string,
+export interface IProduct {
     name: string,
     pageTitle: string,
     description: string,
     metaDescription: string,
-    price: Price,
+    price: TPrice,
     discount: Discount,
     averageRating: number,
     categories: string[],
     attributes: Attribute[],
-    images: Image[]
+    images: Image[],
+    quantity: number
 };
+
+export interface IProductDb extends IProduct {
+    _id: string,
+}
