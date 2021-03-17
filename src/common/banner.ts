@@ -1,8 +1,6 @@
-import { TBanner } from "../types/banner";
-import { Document } from 'mongoose'
-import { IBanner } from "../models/banner";
+import { IBannerInput, IBanner } from "../interfaces/banner";
 
-export const convertBannerObjectToDb = (bannerObj: any = {}):TBanner => {
+export const convertBannerObjectToDb = (bannerObj: any = {}):IBannerInput => {
     return {
         image: bannerObj.image || "",
         content: bannerObj.content || "",
@@ -10,9 +8,9 @@ export const convertBannerObjectToDb = (bannerObj: any = {}):TBanner => {
     }
 }
 
-export const convertDbBannerToNormal = (dbBanner: any):TBanner => {
+export const convertDbBannerToNormal = (dbBanner: any):IBanner=> {
     return {
-        _id: dbBanner._id,
+        _id: dbBanner._id || "",
         image: dbBanner.image || "",
         content: dbBanner.content || "",
         contentPosition: dbBanner.contentPosition || "center-center"

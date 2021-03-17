@@ -1,9 +1,7 @@
-import { Model, Document, MongooseDocument } from "mongoose";
-import { deleteOne, getItemById, getItems, insertOne, updateOne, findOne } from '../common/db';
+import { Document } from "mongoose";
 import ErrorHandler from "../models/errorHandler";
-import User, { IUser } from "../models/user";
 import { comparePasswords, convertDbUserToNormal, convertUserObjecttToDbFormat } from "../common/user";
-import { TUser } from "../types/user";
+import { IUserInput } from "../interfaces/user";
 import UserDb from '../collections/user';
 import { Result, ValidationError, validationResult } from 'express-validator';
 import { NextFunction, Request, Response } from 'express';
@@ -11,8 +9,6 @@ import { generateTokenWithUserId } from "../helpers/jwt";
 
 
 class UserController {
-    private _DbCollection: Model<any> = User;
-
     defaulMethod() {
         return {
             text:`You'ave reached the ${this.constructor.name} default method`
@@ -24,13 +20,13 @@ class UserController {
             if(!errors.isEmpty()) {
                 throw new ErrorHandler(402, "Validation Error", errors.array());
             }
-            const userDb: TUser = convertUserObjecttToDbFormat(req.body);
+            const userDb: IUserInput = convertUserObjecttToDbFormat(req.body);
             const existUser = await UserDb.findByEmail(userDb.email);
             if (existUser) {
                 throw new ErrorHandler(409, "User with that email is already exist");
             } else {
                 const userDoc: Document = await UserDb.signup(userDb);
-                const user: TUser =  convertDbUserToNormal(userDoc);
+                const user: IUserInput =  convertDbUserToNormal(userDoc);
                 res.status(200).json({ user });
             }
         } catch (error) {
@@ -45,7 +41,7 @@ class UserController {
                 throw new ErrorHandler(401, "Validation Error", errors.array());
             }
             const userDb: Document = await UserDb.findByEmail(email);
-            const user: TUser = convertDbUserToNormal(userDb);
+            const user: IUserInput = convertDbUserToNormal(userDb);
             if (!userDb) {
                 throw new ErrorHandler(401, "User with that email is not exists");
             }
@@ -61,14 +57,6 @@ class UserController {
             next(error);
         }
     }
-    public async deleteOne(_id: string):Promise<void> {
-        try {
-            await deleteOne(this._DbCollection, _id);
-        } catch (error) {
-            console.log(error)
-            throw new ErrorHandler(error.statusCode, error.message);
-        }
-    }
     public async signOut (req: Request, res: Response, next: NextFunction):Promise<void> {
         try {
             await UserDb.update(req.body.userId, { loggedIn: false });
@@ -77,33 +65,6 @@ class UserController {
             next(error)
         }
     }
-    public async updateOne(_id: string,  body: any):Promise<void> {
-        try {
-            await updateOne(this._DbCollection, _id, body);
-        } catch (error) {
-            console.log(error);
-            throw new ErrorHandler(error.statusCode, error.message); 
-        }
-    }
-    public async getOne(queryObj:any):Promise<Document> {
-        try {
-            const user:Document = await getItemById(this._DbCollection, queryObj);
-            return user;
-        } catch (error) {
-            console.log(error)
-            throw new ErrorHandler(error.statusCode, error.message);
-        }
-    }
-    public async getAll():Promise<Document> {
-        try {
-            const users: Document = await getItems(this._DbCollection);
-            return users;
-        } catch (error) {
-            console.log(error)
-            throw new ErrorHandler(error.statusCode, error.message);
-        }
-    }
-
 }
 
 export = new UserController();

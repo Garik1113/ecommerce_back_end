@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt  from 'jsonwebtoken';
 import ErrorHandler from '../models/errorHandler';
 import config from 'config';
+import { replaceQuotes } from './objectId';
 
 
 export const generateTokenWithUserId = (_id: string): string => {
@@ -47,11 +48,11 @@ export const verifyCustomerToken = (req: Request, res: Response, next: NextFunct
    const token: string | undefined = getTokenFromRequest(req);
    try {
       if (!token) {
-        throw new ErrorHandler(403, "Token is not difined");
+        throw new ErrorHandler(403, "Token is not defined");
       } else {
             jwt.verify(token, config.get("CUSTOMER_SECRET_TOKEN"), (err: any, customerId: any) => {
                if (customerId) {
-                  req.body.customerId = customerId;
+                  req.body.customerId = replaceQuotes(customerId);
                   next()
                } else {
                   throw new ErrorHandler(403, "Invalid Token")

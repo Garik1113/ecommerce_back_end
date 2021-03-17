@@ -1,16 +1,16 @@
 import isEmpty from "lodash/isEmpty";
 import { Model, Document } from "mongoose";
-import Banner, { IBanner } from "../models/banner";
-import { TBanner } from '../types/banner';
+import Banner from "../models/banner";
+import { IBannerInput } from '../interfaces/banner';
 
 
 class BannerDb {
-    protected _db: Model<IBanner> = Banner;
+    protected _db: Model<any> = Banner;
     get db () {
         return this._db;
     };
 
-    async createBanner(banner: TBanner):Promise<Document> {
+    async createBanner(banner: IBannerInput):Promise<Document> {
         const document: Document = await this.db.create(banner);
         return document;
     }
@@ -19,7 +19,7 @@ class BannerDb {
         return document;
     }
     async getBanners():Promise<Document[]> {
-        const documents: Document[] = await this._db.find();
+        const documents: Document[] = await this.db.find();
         return documents;
     }
     async deleteBanner(bannerId: String):Promise<void> {
@@ -37,7 +37,7 @@ class BannerDb {
                 updateQuery[key] = element;
             }
         };
-        await this._db.findByIdAndUpdate(filter, updateQuery);
+        await this.db.findByIdAndUpdate(filter, updateQuery);
     }
 }
 

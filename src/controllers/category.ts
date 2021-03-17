@@ -1,7 +1,7 @@
 import { Document } from "mongoose";
 import CategoryDb from '../collections/category';
 import { convertCategoryObjectToDbFormat, convertDbCategoryToNormal } from '../common/category'
-import { TCategory } from "../types/category";
+import { ICategory, ICategoryInput } from "../interfaces/category";
 import { NextFunction, Request, Response } from "express";
 
 class CategoryController {
@@ -12,7 +12,7 @@ class CategoryController {
     };
     public async createCategory(req: Request, res: Response, next: NextFunction):Promise<void> {
         const categoryIbj: any = req.body;
-        const formattedCategory:TCategory = convertCategoryObjectToDbFormat(categoryIbj);
+        const formattedCategory:ICategoryInput = convertCategoryObjectToDbFormat(categoryIbj);
         try {
             const item:Document = await CategoryDb.createItem(formattedCategory);
             const result:Document = await CategoryDb.getCategoryById(item._id);
@@ -24,9 +24,9 @@ class CategoryController {
     public async getAllCategories(req: Request, res: Response, next: NextFunction):Promise<void> {
         try {
             const categories: Document[] = await CategoryDb.getCategories();
-            const formatedToNormalCategories:TCategory[] = categories.map(convertDbCategoryToNormal);
+            const formatedToNormalCategories:ICategory[] = categories.map(convertDbCategoryToNormal);
 
-            res.status(200).json({categories});
+            res.status(200).json({categories: formatedToNormalCategories});
         } catch (error) {
             next(error);
         }
@@ -35,7 +35,7 @@ class CategoryController {
         const { _id } = req.params;
         try {
             const categoryDb: Document = await CategoryDb.getCategoryById(_id);
-            const category: TCategory =  convertDbCategoryToNormal(categoryDb);
+            const category: ICategory=  convertDbCategoryToNormal(categoryDb);
             res.status(200).json({category});
         } catch (error) {
             next(error)

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import OrderController from '../controllers/order';
+import { verifyCustomerToken } from '../helpers/jwt';
 
 class OrderRouter {
     private _router: Router = Router();
@@ -15,6 +16,7 @@ class OrderRouter {
 
     _configure() {
         this.router.post('/place_order', this._controller.placeOrder)
+        this.router.get('/', verifyCustomerToken, this._controller.getOrdersByCustomer)
     }
 }
 

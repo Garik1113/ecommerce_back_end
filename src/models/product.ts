@@ -1,8 +1,8 @@
 import { Schema, Document, model } from 'mongoose';
-import { TPrice, Discount, Attribute } from '../types/product'
+import { TPrice, Discount, Attribute } from '../interfaces/product'
 
 
-export interface IProduct extends Document {
+interface IProductInput extends Document {
     name: string,
     pageTitle: string,
     metaDescription: string,
@@ -14,7 +14,7 @@ export interface IProduct extends Document {
     images: string[]
 };
 
-export interface IProductDb extends IProduct {
+interface IProduct extends IProductInput {
     _id: string
 }
 
@@ -64,4 +64,4 @@ const ProductSchema: Schema = new Schema({
     quantity: { type: Number, default: 0 }
 });
 
-export default model<IProduct | IProductDb>('Product', ProductSchema);
+export default model<IProductInput | IProduct>('Product', ProductSchema);

@@ -1,13 +1,15 @@
 import { Document} from "mongoose";
 import ErrorHandler from "../models/errorHandler";
 import { comparePasswords } from "../common/customer";
-import { TCustomer } from "../types/customer";
+import { ICustomer, ICustomerInput } from "../interfaces/customer";
 import CustomerDb from '../collections/customer';
 import { Result, ValidationError, validationResult } from 'express-validator';
 import { NextFunction, Request, Response } from 'express';
 import { generateTokenWithCustomerId, generateTokenWithUserId } from "../helpers/jwt";
 import { convertCustomerObjecttToDbFormat, convertDbCustomerToNormal } from "../common/customer";
 import CartDb from '../collections/cart';
+import { createEmptycart } from '../common/cart';
+import { replaceQuotes } from '../helpers/objectId';
 
 class CustomerController {
     defaulMethod() {
@@ -22,15 +24,16 @@ class CustomerController {
             if(!errors.isEmpty()) {
                 throw new ErrorHandler(402, "Validation Error", errors.array());
             }
-            const customerDb: TCustomer = convertCustomerObjecttToDbFormat(req.body);
+            const customerDb: ICustomerInput = convertCustomerObjecttToDbFormat(req.body);
             const existCustomer = await CustomerDb.findByEmail(customerDb.email);
             if (existCustomer) {
                 throw new ErrorHandler(409, "Customer with that email is already exist");
             } else {
-                const cart: Document = await CartDb.creatCart(null);
-                const cartId: String = cart._id;
+                const cart: Document = await CartDb.creatCart({...createEmptycart()});
+                const cartId: string = cart._id;
                 const customerDoc: Document = await CustomerDb.createCustomer({...customerDb, cartId });
-                const customer: TCustomer =  convertDbCustomerToNormal(customerDoc);
+                const customer: ICustomer =  convertDbCustomerToNormal(customerDoc);
+                await CartDb.updateCart(cartId, {customerId: customer._id})
                 res.status(200).json({ customer });
             }
         } catch (error) {
@@ -48,7 +51,7 @@ class CustomerController {
             if (!customerDb) {
                 throw new ErrorHandler(401, "Customer with that email is not exists");
             }
-            const customer: TCustomer = convertDbCustomerToNormal(customerDb);
+            const customer: ICustomer = convertDbCustomerToNormal(customerDb);
             if (comparePasswords(password, customer.password || "")) {
                 const token: string = generateTokenWithCustomerId(customerDb._id);
                 await CustomerDb.update(customerDb._id, { loggedIn: true });
@@ -64,6 +67,27 @@ class CustomerController {
         try {
             await CustomerDb.update(req.body.customerId, { loggedIn: false });
             res.status(200).json({ok: "ok"});
+        } catch (error) {
+            next(error);
+        }
+    }
+    public async getCustomerDetails (req: Request, res: Response, next: NextFunction):Promise<void> {
+        const { customerId } = req.body;
+        try {
+            const customerDb = await CustomerDb.getCustomerById(replaceQuotes(customerId));
+            const customer = convertDbCustomerToNormal(customerDb);
+            res.status(200).json({customer});
+        } catch (error) {
+            console.log(error)
+            next(error);
+        }
+    }
+    public async updateCustomer (req: Request, res: Response, next: NextFunction):Promise<void> {
+        const { customerId, data } = req.body;
+        try {
+            const result = await CustomerDb.update(customerId.substring(1, customerId.length - 1), data);
+            const customer: ICustomer = convertDbCustomerToNormal(result)
+            res.status(200).json({customer});
         } catch (error) {
             next(error);
         }

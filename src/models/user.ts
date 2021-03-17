@@ -1,10 +1,14 @@
 import { Schema, model, Document } from 'mongoose';
 
-export interface IUser extends Document {
+interface IUserInput extends Document {
     name: string,
     email: string,
     password: string,
-    loggedIn?: boolean
+    loggedIn: boolean
+}
+
+interface IUser extends IUserInput {
+    _id: string
 }
 
 const UserSchema: Schema = new Schema({
@@ -14,4 +18,4 @@ const UserSchema: Schema = new Schema({
     loggedIn: { type: Boolean, required: true, default: false }
 })
 
-export default model("User", UserSchema);
+export default model<IUserInput | IUser>("User", UserSchema);

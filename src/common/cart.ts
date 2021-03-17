@@ -1,10 +1,9 @@
-import { add } from "lodash";
-import { TAddress } from "../types/address";
-import { ICartDb, ICartItem, TCartItemAttribute } from "../types/cart";
-import { TPrice } from "../types/product";
+import { IAddress } from "../interfaces/address";
+import { ICartInput, ICart, ICartItemInput, TCartItemAttribute } from "../interfaces/cart";
+import { TPrice } from "../interfaces/product";
 
 export const getTotalPriceOfItems = (items: any[] = []): TPrice => {
-    const value:number = items.reduce((initialState: number, current: ICartItem) => {
+    const value:number = items.reduce((initialState: number, current: ICartItemInput) => {
             initialState += (current.product.price.value * current.quantity)
             return initialState;
     }, 0);
@@ -15,27 +14,68 @@ export const getTotalPriceOfItems = (items: any[] = []): TPrice => {
 }
 
 export const getTotalQtyOfItems = (items: any[] = []) => {
-    const qty:number = items.reduce((initialState: number, current: ICartItem) => {
+    const qty:number = items.reduce((initialState: number, current: ICartItemInput) => {
             initialState += current.quantity
             return initialState;
     }, 0);
     return qty;
 }
 
-export const convertDbCartToNormal = (cartObj: any = {}): ICartDb => {
-    const cart: ICartDb = {
+export const convertDbCartToNormal = (cartObj: any = {}): ICart => {
+    const cart: ICart = {
         _id: cartObj._id,
         items: cartObj.items || [],
         paymentMethod: cartObj.paymentMethod,
         shippingAddress: cartObj.shippingAddress,
         billingAddress: cartObj.billingAddress,
-        userId: cartObj.userId,
+        customerId: cartObj.customerId,
         totalPrice: getTotalPriceOfItems(cartObj.items),
         totalQty: getTotalQtyOfItems(cartObj.items)
     };
 
     return cart;
 }
+
+export const createEmptycart = (): ICartInput => {
+    const cart: ICartInput = {
+        items:[],
+        paymentMethod: "",
+        shippingAddress: {
+            firstName: "",
+            lastName: "",
+            email: "",
+            country: "",
+            city: "",
+            state: "",
+            street: "",
+            firstAddress: "",
+            secondAddress: "",
+            phone: "",
+            zip: "",
+            company: ""
+        },
+        billingAddress:  {
+            firstName: "",
+            lastName: "",
+            email: "",
+            country: "",
+            city: "",
+            state: "",
+            street: "",
+            firstAddress: "",
+            secondAddress: "",
+            phone: "",
+            zip: "",
+            company: ""
+        },
+        totalPrice: {value: 0, currency: "USD"},
+        totalQty: 0,
+        customerId: null
+    };
+
+    return cart;
+}
+
 
 export const convertCartAttributesToNormal = (attributes: any[] = []): TCartItemAttribute[] => {
     return attributes.map(e => {
@@ -46,16 +86,19 @@ export const convertCartAttributesToNormal = (attributes: any[] = []): TCartItem
     })
 }
 
-export const convertInputAddressToNormal = (address: any): TAddress => {
+export const convertInputAddressToNormal = (address: any): IAddress => {
     return {
         firstName: address.firstName || "",
         lastName: address.lastName || "",
-        firstAddress: address.firstAddress || "",
-        secondAddress: address.secondAddress || "",
+        email: address.email || "",
         country: address.country || "",
         state: address.state || "",
         city: address.city || "",
+        street: address.street || "",
+        firstAddress: address.firstAddress || "",
+        secondAddress: address.secondAddress || "",
         phone: address.phone || "",
-        zip: address.zip || 0
+        zip: address.zip || "",
+        company: address.company || ""
     }
 }

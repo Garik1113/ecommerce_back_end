@@ -1,29 +1,31 @@
-import { ICartDb } from '../types/cart';
-import { IOrderDb, IOrderInput } from '../types/order';
+import { ICart } from '../interfaces/cart';
+import { IOrder, IOrderInput } from '../interfaces/order';
 
-export const convertCartToOrder = (cart: ICartDb):IOrderInput => {
+export const convertCartToOrder = (cart: ICart):IOrderInput => {
     return {
         cartId: cart._id,
         shippingAddress: cart.shippingAddress,
         billingAddress: cart.billingAddress,
-        userId: cart.userId,
+        customerId: cart.customerId,
         paymentMethod: cart.paymentMethod,
         totalPrice: cart.totalPrice,
         totalQty: cart.totalQty,
-        items: cart.items
+        items: cart.items,
+        status: "pending"
     }
 }
 
-export const convertDbOrderToNormal = (orderObj: any):IOrderDb => {
+export const convertDbOrderToNormal = (orderObj: any):IOrder => {
     return {
         _id: orderObj._id,
         cartId: orderObj._id,
         shippingAddress: orderObj.shippingAddress,
         billingAddress: orderObj.billingAddress,
-        userId: orderObj.userId,
+        customerId: orderObj.customerId,
         paymentMethod: orderObj.paymentMethod,
         totalPrice: orderObj.totalPrice,
         totalQty: orderObj.totalQty,
-        items: orderObj.items
+        items: orderObj.items,
+        status: orderObj.status
     }
 }

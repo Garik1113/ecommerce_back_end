@@ -2,15 +2,15 @@ import { Model, Document } from "mongoose";
 import ErrorHandler from "../models/errorHandler";
 const ObjectID = require('mongodb').ObjectID;
 import Product from "../models/product";
-import { IProduct } from "../types/product";
+import { IProductInput } from "../interfaces/product";
 
 
 class ProductDb {
     protected _db:Model<any> = Product;
 
-    async createProduct (productObj: any):Promise<Document> {
+    async createProduct (product: IProductInput):Promise<Document> {
         try {
-            const document: Document = await this._db.create(productObj);
+            const document: Document = await this._db.create(product);
             return document;
         } catch (error) {
             throw new ErrorHandler(401, error.message)
@@ -25,7 +25,7 @@ class ProductDb {
         }
         
     }
-    async updateProduct (_id: string, body: any):Promise<IProduct | any> {
+    async updateProduct (_id: string, body: any):Promise<IProductInput | any> {
         try {
             const filter = {"_id": ObjectID(_id)};
             const updateQuery:any = {};

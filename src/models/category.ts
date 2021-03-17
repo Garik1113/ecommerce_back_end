@@ -1,13 +1,17 @@
-import mongoose, { Schema, Document, model } from 'mongoose';
+import { Schema, Document, model } from 'mongoose';
 
-export interface ICategory extends Document {
+interface ICategoryInput extends Document {
     name: string,
     include_in_menu: boolean
 };
+
+interface ICategory extends ICategoryInput {
+    _id: string
+}
 
 const CategorySchema:Schema = new Schema({
     name: { type: String },
     include_in_menu: { type: Boolean },
 });
 
-export default model<ICategory>('Category', CategorySchema);
+export default model<ICategory | ICategoryInput>('Category', CategorySchema);

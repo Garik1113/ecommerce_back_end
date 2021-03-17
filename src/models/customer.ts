@@ -1,13 +1,18 @@
 import { Schema, model, Document } from 'mongoose';
 
-export interface ICustomer extends Document {
+interface ICustomerInput extends Document {
     firstName: string,
     lastName: string,
     email: string,
     password: string,
     cartId: string,
-    loggedIn?: boolean
+    loggedIn: boolean
 }
+
+interface ICustomer extends ICustomerInput {
+    _id: string
+}
+
 
 const CustomerSchema: Schema = new Schema({
     firstName: { type: String, required: true },
@@ -18,4 +23,4 @@ const CustomerSchema: Schema = new Schema({
     loggedIn: { type: Boolean, required: true, default: false }
 })
 
-export default model<ICustomer>("Customer", CustomerSchema);
+export default model<ICustomerInput | ICustomer>("Customer", CustomerSchema);

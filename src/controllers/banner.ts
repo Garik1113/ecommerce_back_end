@@ -5,7 +5,7 @@ import { uploadFile } from "../aws/aws";
 import BannerDb from '../collections/banner';
 import { convertBannerObjectToDb, convertDbBannerToNormal } from "../common/banner";
 import ErrorHandler from "../models/errorHandler";
-import { TBanner } from "../types/banner";
+import { IBannerInput } from "../interfaces/banner";
 
 class BannerController {
     protected _db: typeof BannerDb = BannerDb;
@@ -15,10 +15,10 @@ class BannerController {
 
     public createBanner = async(req: Request, res: Response, next: NextFunction):Promise<void>=> {
         try {
-            const banner: TBanner = convertBannerObjectToDb(req.body);
+            const banner: IBannerInput = convertBannerObjectToDb(req.body);
             const result: Document = await this.db.createBanner(banner);
             const document: Document = await this.db.getBannerById(result._id);
-            const bannerResult: TBanner = convertDbBannerToNormal(document);
+            const bannerResult: IBannerInput = convertDbBannerToNormal(document);
             res.status(200).json({banner: bannerResult});
         } catch (error) {
             next(error);
@@ -28,7 +28,7 @@ class BannerController {
         const { _id } = req.params;
         try {
             const document: Document = await this.db.getBannerById(_id);
-            const banner: TBanner = convertDbBannerToNormal(document);
+            const banner: IBannerInput = convertDbBannerToNormal(document);
             res.status(200).json({ banner });
         } catch (error) {
             next(error);
@@ -37,7 +37,7 @@ class BannerController {
     public getBanners = async(req: Request, res: Response, next: NextFunction):Promise<void> => {
         try {
             const documents: Document[] = await this.db.getBanners();
-            const banners: TBanner[] = documents.map(convertDbBannerToNormal);
+            const banners: IBannerInput[] = documents.map(convertDbBannerToNormal);
             res.status(200).json({ banners });
         } catch (error) {
             next(error);

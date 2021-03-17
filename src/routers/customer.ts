@@ -18,8 +18,8 @@ class CustomerRouter {
         this._router.post('/signup',  validateCreateCustomer(),  this._controller.signup);
         this._router.post('/signin', validateCustomerSignin(),  this._controller.signin);
         this._router.put('/signout', verifyCustomerToken,  this._controller.signOut);
-
-
+        this._router.get('/', verifyCustomerToken,  this._controller.getCustomerDetails);
+        this._router.put('/', verifyCustomerToken,  this._controller.updateCustomer);
         // this._router.delete('/:_id', async (req: Request, res: Response, next: NextFunction):Promise<void> => {    
         //     try {
         //         await this._controller.deleteOne(req.params._id);

@@ -31,7 +31,7 @@ export type TAttributeData = {
     valueId: number
 }
 
-export interface IProduct {
+export interface IProductInput {
     name: string,
     pageTitle: string,
     description: string,
@@ -45,6 +45,6 @@ export interface IProduct {
     quantity: number
 };
 
-export interface IProductDb extends IProduct {
+export interface IProduct extends IProductInput {
     _id: string,
 }

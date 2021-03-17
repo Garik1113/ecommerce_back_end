@@ -1,14 +1,15 @@
 import { Model, Document, Types } from "mongoose";
 import ErrorHandler from "../models/errorHandler";
-import User, { IUser } from "../models/user";
-import { TUser } from "../types/user";
+import User  from "../models/user";
+import { IUserInput } from "../interfaces/user";
+import { replaceQuotes } from '../helpers/objectId';
 var mongoose = require('mongoose');
 var ObjectId = mongoose.Types.ObjectId;
 
 class UserDb {
     protected _db: Model<any> = User;
 
-    async signup (user: TUser): Promise<Document> {
+    async signup (user: IUserInput): Promise<Document> {
         const userDb: Document = await this._db.create(user);
         return userDb;
     }
@@ -25,7 +26,7 @@ class UserDb {
                     updateQuery[key] = element;
                 }
             };
-            await this._db.findByIdAndUpdate({"_id": "6012d2c9d73acf4945ccd045"}, updateQuery);
+            await this._db.findByIdAndUpdate({"_id": replaceQuotes(userId)}, updateQuery);
         } catch (error) {
             throw new ErrorHandler(401, error.message)
         }

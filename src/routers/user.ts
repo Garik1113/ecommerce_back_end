@@ -1,7 +1,7 @@
 import { NextFunction, Router, Request, Response } from "express";
 import UserController from '../controllers/user';
 import { Document } from 'mongoose';
-import { TUser } from "../types/user";
+import { IUserInput } from "../interfaces/user";
 import { validateCreateUser, validateSignin } from "../helpers/validation";
 import { validationResult, check } from 'express-validator'
 import { verifyToken } from "../helpers/jwt";
@@ -21,40 +21,6 @@ class UserRouter {
         this._router.put('/admin/signout', verifyToken,  this._controller.signOut);
         this._router.post('/admin/signup',  validateCreateUser(),  this._controller.signup);
         this._router.post('/admin/signin', validateSignin(),  this._controller.signin);
-        // this._router.delete('admin/:_id', async (req: Request, res: Response, next: NextFunction):Promise<void> => {    
-        //     try {
-        //         await this._controller.deleteOne(req.params._id);
-        //         res.status(200).json({ status: "Deleted" });
-        //     } catch (error) {
-        //         next(error);
-        //     };
-        // });
-        // this._router.put('/:_id', async (req: Request, res: Response, next: NextFunction):Promise<void> => {
-        //     const { _id } = req.params;
-        //     try {
-        //         await this._controller.updateOne( _id, req.body);
-        //         res.status(200).json({ status: "Updated" });
-        //     } catch (error) {
-        //         next(error);
-        //     };
-        // });
-        // this._router.get('/:_id', async (req: Request, res: Response, next: NextFunction):Promise<void> => {
-        //     const { _id } = req.params;
-        //     try {
-        //         const user: Document = await this._controller.getOne(_id);
-        //         res.status(200).json({ user });
-        //     } catch (error) {
-        //         next(error);
-        //     };
-        // });
-        // this._router.get('/', async (req: Request, res: Response, next: NextFunction):Promise<void> => {
-        //     try {
-        //         const users: Document = await this._controller.getAll();
-        //         res.status(200).json({ users });
-        //     } catch (error) {
-        //         next(error);
-        //     };
-        // });
     }
 }
 

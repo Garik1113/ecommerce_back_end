@@ -1,10 +1,14 @@
 import { Schema, model, Document } from 'mongoose';
 
-export interface IBanner extends Document {
+interface IBannerInput extends Document {
     image: String,
     content: String,
     contentPosition: String
 };
+
+interface IBanner extends IBannerInput {
+    _id: string
+}
 
 const BannerSchema:Schema = new Schema({
     image: { 
@@ -19,4 +23,4 @@ const BannerSchema:Schema = new Schema({
     }
 });
 
-export default model<IBanner>('Banner', BannerSchema);
+export default model<IBanner | IBannerInput>('Banner', BannerSchema);

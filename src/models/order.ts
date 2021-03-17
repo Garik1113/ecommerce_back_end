@@ -1,21 +1,23 @@
 import { Schema, Document, model } from 'mongoose';
-import { TAddress } from '../types/address';
-import { ICartItem, ICartItemDb } from '../types/cart';
-import { TPrice } from '../types/product';
+import { IAddress } from '../interfaces/address';
+import { ICartItemInput, ICartItem } from '../interfaces/cart';
+import { TPrice } from '../interfaces/product';
 
-export interface IOrder extends Document {
-    id: string,
-    items: ICartItem[],
+interface IOrderInput extends Document {
+    items: ICartItemInput[],
     paymentMethod: string,
-    shippingAddress: TAddress,
-    billingAddress: TAddress,
+    shippingAddress: IAddress,
+    billingAddress: IAddress,
     totalQty: number,
-    totalPrice: TPrice
+    totalPrice: TPrice,
+    status: string,
+    cartId: string,
+    customerId: string
 };
 
-export interface IOrderDb extends IOrder {
+interface IOrder extends IOrderInput {
     _id: string
-    items: ICartItemDb[]
+    items: ICartItem[]
 }
 
 const OrderSchem: Schema = new Schema({
@@ -43,7 +45,16 @@ const OrderSchem: Schema = new Schema({
     shippingAddress: { type: {} },
     billingAddress: { type: {} },
     totalQty: { type: Number },
-    totalPrice: { type: {} }
-});
+    totalPrice: { type: {} },
+    status: { type: String, default: "pending" },
+    cartId: { 
+        type: Schema.Types.ObjectId,
+        ref: "Cart" 
+    },
+    customerId: { 
+        type: Schema.Types.ObjectId,
+        ref: "Customer" 
+    }
+}, {timestamps: true});
 
-export default model<IOrder | IOrderDb>('Order', OrderSchem);
+export default model<IOrder | IOrderInput>('Order', OrderSchem);

@@ -1,29 +1,41 @@
 import { Model, Document } from "mongoose"
 import Cart from "../models/cart"
-import { ICart, ICartDb, ICartItem } from "../types/cart";
-import { Attribute } from "../types/product";
+import { ICartInput, ICart, ICartItemInput } from "../interfaces/cart";
+import { Attribute } from "../interfaces/product";
 
 class CartDb {
     protected _db: Model<any> = Cart;
 
-    async creatCart(cart: ICart | null): Promise<Document> {
+    async creatCart(cart: ICartInput | null): Promise<Document> {
         const cartDb: Document = await this._db.create(cart);
         await cartDb.save();
         return cartDb;
     }
-    async getCart(cartId: string): Promise<Document> {
-        const cart: Document = await Cart.findById(cartId);
-        return cart;
+    async getCart(cartId: string): Promise<Document | any> {
+        if(cartId) {
+            const cart: Document = await Cart.findById(cartId);
+            return cart;  
+        }
     }
-    async addItemToCart (cartId: string, item: ICartItem) {
+    async addItemToCart (cartId: string, item: ICartItemInput) {
         await Cart.findByIdAndUpdate(cartId, { $push: { items: item } });
     }
-    async getCartById (cartId: string): Promise<Document> {
-        const cart: Document = await Cart.findById(cartId).populate("items.product");
-        return cart;
+    async getCartById (cartId: string): Promise<Document | any> {
+        if (cartId) {
+            const cart: Document = await Cart.findById(cartId).populate("items.product");
+            return cart;
+        }
     }
-    async updateCart ( cartId: string, cart: ICart ) {
-        await Cart.findByIdAndUpdate(cartId, cart, { new: true });
+    async updateCart (cartId: string, body: any ) {
+        const updateQuery:any = {};
+            for (const key in body) {
+                if (Object.prototype.hasOwnProperty.call(body, key)) {
+                    const element = body[key];
+                    updateQuery[key] = element;
+                }
+            };
+        const result: Document = await Cart.findByIdAndUpdate({"_id": cartId}, updateQuery);
+        return result;
     }
     async addItemQuantityToCart (cartId: string, itemId: string | undefined, quantity: number) {
         await Cart.findByIdAndUpdate(

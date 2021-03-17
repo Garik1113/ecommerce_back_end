@@ -1,21 +1,22 @@
 import { Schema, Document, model } from 'mongoose';
-import { TAddress } from '../types/address';
-import { ICartItem, ICartItemDb } from '../types/cart';
-import { TPrice } from '../types/product';
+import { IAddress } from '../interfaces/address';
+import { ICartItemInput, ICartItem } from '../interfaces/cart';
+import { TPrice } from '../interfaces/product';
 
-export interface ICart extends Document {
+export interface ICartInput extends Document {
     id: string,
-    items: ICartItem[],
+    items: ICartItemInput[],
     paymentMethod: string,
-    shippingAddress: TAddress,
-    billingAddress: TAddress,
+    shippingAddress: IAddress,
+    billingAddress: IAddress,
     totalQty: number,
-    totalPrice: TPrice
+    totalPrice: TPrice,
+    customerId: string
 };
 
-export interface ICartDb extends ICart {
+export interface ICart extends ICartInput {
     _id: string
-    items: ICartItemDb[]
+    items: ICartItem[]
 }
 
 const CartSchema:Schema = new Schema({
@@ -43,7 +44,11 @@ const CartSchema:Schema = new Schema({
     shippingAddress: { type: {} },
     billingAddress: { type: {} },
     totalQty: { type: Number },
-    totalPrice: { type: {} }
+    totalPrice: { type: {} },
+    customerId: {
+        type: Schema.Types.ObjectId,
+        ref: "Customer"
+    }
 });
 
-export default model<ICart | ICartDb>('Cart', CartSchema);
+export default model<ICartInput | ICart>('Cart', CartSchema);

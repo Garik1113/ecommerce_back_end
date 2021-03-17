@@ -1,5 +1,4 @@
-import { TCartItemAttribute } from '../types/cart';
-import { Attribute, AttributeValue, Image, IProduct, IProductDb, TAttributeData, TPrice } from '../types/product';
+import { Attribute, Image, IProductInput, IProduct, TPrice } from '../interfaces/product';
 
 const makeImageReadyForDb = (images: string[] = []):Image[] => {
     return images.map((image) => {
@@ -27,8 +26,8 @@ const makeAttributeReadyForDb = (attributes: any[] = []): Attribute[] => {
     })
 }
 
- export const convertProductObjectToDbFormat = (productObj: any):IProduct => {
-    const product: IProduct = {
+ export const convertProductObjectToDbFormat = (productObj: any):IProductInput => {
+    const product: IProductInput = {
         name: productObj.name || "",
         pageTitle: productObj.pageTitle || "",
         description: productObj.description || "",
@@ -44,8 +43,8 @@ const makeAttributeReadyForDb = (attributes: any[] = []): Attribute[] => {
     return product;
 }
 
-export const convertDbProductToNormal = (productDb: any):IProductDb => {
-    const product: IProductDb = {
+export const convertDbProductToNormal = (productDb: any):IProduct => {
+    const product: IProduct = {
         _id: productDb._id,
         name: productDb.name || "",
         pageTitle: productDb.pageTitle || "",
@@ -62,11 +61,11 @@ export const convertDbProductToNormal = (productDb: any):IProductDb => {
     return product;
 }
 
-export const isProductConfigurable = (product: IProduct):boolean => {
+export const isProductConfigurable = (product: IProductInput):boolean => {
     return product.attributes.length > 0;
 }
 
-export const getTotalPriceOfProduct = (product: IProductDb, quantity: number): TPrice => {
+export const getTotalPriceOfProduct = (product: IProduct, quantity: number): TPrice => {
     return {
         currency: product.price.currency,
         value: product.price.value * quantity

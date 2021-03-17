@@ -1,16 +1,16 @@
 import { Model, Document } from "mongoose";
 const ObjectID = require('mongodb').ObjectID;
-import Category, { ICategory } from "../models/category";
+import Category from "../models/category";
 import isEmpty from 'lodash/isEmpty'
-import { TCategory } from "../types/category";
+import { ICategoryInput } from "../interfaces/category";
 
 class CategoryDb {
-    protected _db:Model<ICategory> = Category;
+    protected _db:Model<any> = Category;
     get db() {
         return this._db;
     }
 
-    async createItem (category: TCategory):Promise<Document> {
+    async createItem (category: ICategoryInput):Promise<Document> {
         const document:Document = await this._db.create(category);
         return document;
     }
