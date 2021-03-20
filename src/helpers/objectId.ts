@@ -1,1 +1,1 @@
-export const replaceQuotes = (id:string):string => id.replace(/"/g, '')
+export const replaceQuotes = (id:string):string => String(id).replace(/"/g, '')
