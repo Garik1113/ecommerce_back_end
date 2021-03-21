@@ -25,6 +25,7 @@ class ProductRouter {
         this._router.post('/admin/upload_image', verifyToken, this._controller.uploadImage);
         //Customer Routes
         this._router.get('/get_products/:_id', this._controller.getProductsByCategory);
+        this._router.get('/', this._controller.getAllProducts);
         this._router.get('/get_product/:_id', this._controller.getProductById);
         
     }

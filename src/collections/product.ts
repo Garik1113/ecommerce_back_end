@@ -48,12 +48,34 @@ class ProductDb {
             throw new ErrorHandler(401, error.message)
         }
     }
-    async getProductsByCategory (_id: String): Promise<Document[]> {
-        const items: Document[] = await this._db.find({categories: _id});
+    async getProductsByCategory (_id: String, params: any): Promise<Document[]> {
+        const { sort } = params;
+        let sortNumber = 1
+        if (sort == 'high') {
+            sortNumber = -1
+        }
+        
+        const items: Document[] = await this._db.find({categories: _id}).sort({"price.value": sortNumber});
+        // const items = await this._db.aggregate([
+        //     {
+        //         $match: {
+        //             "categories": _id
+        //             // "price.value": { 
+        //             //     $gt: 1000,
+        //             //     $lt: 4000
+        //             // }
+        //         }
+        //     }
+        // ])
         return items;
     }
-    async getAllProducts ():Promise<Document[]> {
-        const items: Document[] = await this._db.find();
+    async getAllProducts (params:any):Promise<Document[]> {
+        const { date } = params;
+        const query:any = {};
+        if (date == 'latest') {
+            query._id = 1
+        } 
+        const items: Document[] = await this._db.find({}).sort(query);
         return items;
     }
 }

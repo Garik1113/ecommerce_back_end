@@ -62,6 +62,6 @@ const ProductSchema: Schema = new Schema({
         }
     ],
     quantity: { type: Number, default: 0 }
-});
+}, { timestamps: true });
 
 export default model<IProductInput | IProduct>('Product', ProductSchema);

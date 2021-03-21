@@ -18,6 +18,7 @@ class BannerRouter {
         this._router.delete('/admin/:_id', verifyToken, this._controller.deleteBanner);
         this._router.put('/admin/:_id', verifyToken, this._controller.updateBanner);
         this._router.get('/admin/', verifyToken, this._controller.getBanners);
+        this._router.get('/:_id', this._controller.getBannerById);
         this._router.post('/admin/add_banner_image', verifyToken, this._controller.uploadImage);
     }
 }

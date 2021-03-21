@@ -1,5 +1,55 @@
 import { Attribute, Image, IProductInput, IProduct, TPrice } from '../interfaces/product';
 
+export const productFilters = {
+    "price-range": {
+        id: 1,
+        title: "Price Range",
+        value: "price-range",
+        type: "range",
+        variants: [
+            {
+                id: 1,
+                label: "0 - 10000",
+                value: "0-10000",
+                minValue: 0,
+                maxValue: 10000
+            },
+            {
+                id: 2,
+                label: "10000 - 100000",
+                value: "10000-100000",
+                minValue: 10000,
+                maxValue: 100000
+            },
+            {
+                id: 3,
+                label: "100000 - 1000000",
+                value: "100000-1000000",
+                minValue: 100000,
+                maxValue: 1000000
+            }
+        ]
+    },
+    "availability": {
+        id: 2,
+        title: "Availability",
+        value: 'availability',
+        type: "option",
+        variants: [
+            {
+                id: 1,
+                label: "In stock",
+                value: "in-stock"
+            },
+            {
+                id: 2,
+                label: "Out of stock",
+                value: "out-of-stock"
+            }
+        ]
+    }
+}
+
 const makeImageReadyForDb = (images: string[] = []):Image[] => {
     return images.map((image) => {
         return {
@@ -69,5 +119,16 @@ export const getTotalPriceOfProduct = (product: IProduct, quantity: number): TPr
     return {
         currency: product.price.currency,
         value: product.price.value * quantity
+    }
+}
+
+export const getFiltersFromParams = (filterParam:any) => {
+    for (const key in filterParam) {
+        if (Object.prototype.hasOwnProperty.call(filterParam, key)) {
+            const element = filterParam[key];
+            if(Array.isArray(element)) {
+
+            }
+        }
     }
 }

@@ -1,5 +1,5 @@
 import { Model, Document } from "mongoose";
-import { convertDbProductToNormal, convertProductObjectToDbFormat } from "../common/product";
+import { convertDbProductToNormal, convertProductObjectToDbFormat, getFiltersFromParams } from "../common/product";
 import ErrorHandler from "../models/errorHandler";
 import Product from "../models/product";
 import { IProductInput, IProduct } from "../interfaces/product";
@@ -59,8 +59,9 @@ class ProductController {
     }
     public async getProductsByCategory(req: Request, res: Response, next: NextFunction):Promise<IProductInput[] | any> {
         const { _id } = req.params;
+        const { sort } = req.query;
         try {
-            const documents: Document[] = await ProductDb.getProductsByCategory(_id);
+            const documents: Document[] = await ProductDb.getProductsByCategory(_id, { sort });
             const products: IProduct[] = documents.map(convertDbProductToNormal);
             res.status(200).json({ products });
         } catch (error) {
@@ -68,10 +69,10 @@ class ProductController {
         }
     }
     public async getAllProducts(req: Request, res: Response, next: NextFunction):Promise<IProductInput[] | any> {
+        const { date } = req.query;
         try {
-            const documents: Document[] = await ProductDb.getAllProducts();
+            const documents: Document[] = await ProductDb.getAllProducts({ date });
             const products: IProduct[] = documents.map(document => convertDbProductToNormal(document));
-            
             res.status(200).json({ products });
         } catch (error) {
             next(error)

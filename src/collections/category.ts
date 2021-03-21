@@ -3,6 +3,7 @@ const ObjectID = require('mongodb').ObjectID;
 import Category from "../models/category";
 import isEmpty from 'lodash/isEmpty'
 import { ICategoryInput } from "../interfaces/category";
+import { ParsedUrlQuery } from 'querystring';
 
 class CategoryDb {
     protected _db:Model<any> = Category;
@@ -41,10 +42,14 @@ class CategoryDb {
         return updated;
     }
 
-    async getCategories():Promise<Document[]> {
-        const items: Document[] = await this._db.find();
+    async getCategories(include_in_menu: any):Promise<Document[]> {
+        const query = include_in_menu ? {
+            include_in_menu: true
+        } : {}
+        const items: Document[] = await this._db.find(query);
         return items;
     }
+    
 }
 
 export default new CategoryDb()

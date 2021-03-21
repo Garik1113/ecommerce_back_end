@@ -24,8 +24,10 @@ class CategoryRouter {
         this._router.put('/admin/:_id', verifyToken, this._controller.updateCategory)
 
         //Customer routes
-        this._router.get('/:_id', this._controller.getCategoryById);
         this._router.get('/', this._controller.getAllCategories);
+        this._router.get('/:_id', this._controller.getCategoryById);
+        
+        
     }
 };
 

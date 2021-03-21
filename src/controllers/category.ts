@@ -3,6 +3,7 @@ import CategoryDb from '../collections/category';
 import { convertCategoryObjectToDbFormat, convertDbCategoryToNormal } from '../common/category'
 import { ICategory, ICategoryInput } from "../interfaces/category";
 import { NextFunction, Request, Response } from "express";
+import { ParsedUrlQuery } from 'querystring';
 
 class CategoryController {
     defaulMethod() {
@@ -22,8 +23,9 @@ class CategoryController {
         }
     }
     public async getAllCategories(req: Request, res: Response, next: NextFunction):Promise<void> {
+        const { include_in_menu } = req.query;
         try {
-            const categories: Document[] = await CategoryDb.getCategories();
+            const categories: Document[] = await CategoryDb.getCategories(include_in_menu);
             const formatedToNormalCategories:ICategory[] = categories.map(convertDbCategoryToNormal);
 
             res.status(200).json({categories: formatedToNormalCategories});
