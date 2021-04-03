@@ -3,11 +3,11 @@ import ErrorHandler from "../models/errorHandler";
 const ObjectID = require('mongodb').ObjectID;
 import Product from "../models/product";
 import { IProductInput } from "../interfaces/product";
+import { replaceQuotes } from '../helpers/objectId';
 
 
 class ProductDb {
     protected _db:Model<any> = Product;
-
     async createProduct (product: IProductInput):Promise<Document> {
         try {
             const document: Document = await this._db.create(product);
@@ -48,34 +48,94 @@ class ProductDb {
             throw new ErrorHandler(401, error.message)
         }
     }
-    async getProductsByCategory (_id: String, params: any): Promise<Document[]> {
-        const { sort } = params;
-        let sortNumber = 1
-        if (sort == 'high') {
-            sortNumber = -1
+    async getProductsByCategory (category_id: String, params: any): Promise<Document[]> {
+        const { date, ids, name, sort, limit, page, perPage=1, discount, price_min, price_max } = params;
+        console.log(price_min)
+        const matchParams: any = {
+            $match: {},
+        };
+        const sortParams: any = {
+            $sort: {}
+        };
+        const aggr:any = [];
+        if (category_id) {
+            matchParams.$match.categories = ObjectID(category_id) ;
+        }
+        if(ids) {
+            const matchIds = ids.split(",").map((id: string) => ObjectID(id));
+            matchParams.$match._id = {
+                $in: matchIds
+            }
+        }
+        if(discount) {
+            matchParams.$match.discount = {
+                $gt: 0
+            }
+        }
+        if(price_min && price_min !== "undefined") {
+            matchParams.$match.price = {
+                $gt: Number(price_min)
+            };
+        }
+        if(price_max && price_max !== "undefined") {
+            matchParams.$match.price = {
+                ...matchParams.$match.price,
+                $lt: Number(price_max)
+            };
+        }
+        aggr.push(matchParams)
+        if (date == "latest") {
+            sortParams.$sort.createdAt = -1;
+            aggr.push(sortParams)
+        } else if (date == "newest") {
+            sortParams.$sort.createdAt = 1;
+            aggr.push(sortParams)
+        }
+
+        if (page) {
+            aggr.push({$skip: Number(page) * Number(limit)})
+        }
+        if(limit) {
+            aggr.push({$limit: Number(limit)})
         }
         
-        const items: Document[] = await this._db.find({categories: _id}).sort({"price.value": sortNumber});
-        // const items = await this._db.aggregate([
-        //     {
-        //         $match: {
-        //             "categories": _id
-        //             // "price.value": { 
-        //             //     $gt: 1000,
-        //             //     $lt: 4000
-        //             // }
-        //         }
-        //     }
-        // ])
+        console.log(JSON.stringify(aggr))
+        const items: Document[] = await this._db.aggregate(aggr);
         return items;
     }
     async getAllProducts (params:any):Promise<Document[]> {
-        const { date } = params;
-        const query:any = {};
-        if (date == 'latest') {
-            query._id = 1
-        } 
-        const items: Document[] = await this._db.find({}).sort(query);
+        const { date, ids, name, sort, limit, skip, perPage = 2 } = params;
+        const matchParams: any = {};
+        const sortParams: any = {};
+        const aggr:any = [
+            {  
+                $match: matchParams,
+            }
+        ];
+        if(ids) {
+            const matchIds = ids.split(",").map((id: string) => ObjectID(id));
+            matchParams._id = {
+                $in: matchIds
+            }
+        }
+        if (name) {
+            matchParams.name = {
+                $search: "/" + replaceQuotes(name) + "/"
+            }
+        }
+        if (date == "latest") {
+            sortParams.createdAt = -1;
+            aggr.push(sortParams)
+        }
+
+        if(limit) {
+            aggr.push({$limit: Number(limit)})
+        }
+        if (skip) {
+            aggr.push({$skip: Number(skip) * Number(perPage)})
+        }
+        console.log(aggr)
+        const items: Document[] = await this._db.aggregate(aggr);
         return items;
     }
 }

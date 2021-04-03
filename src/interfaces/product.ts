@@ -14,21 +14,22 @@ export type Image = {
     main_image: string
 }
 
-export type AttributeValue = {
-    id: Number,
-    label: String,
-    images: Image[]
+export interface IVariantAttribute {
+    attributeId: string,
+    valueId: string,
 }
 
-export type Attribute = {
-    id: Number,
-    label: String,
-    values: AttributeValue[]
+export interface IVariantProductInput {
+    images: Image[],
+    price: number,
+    quantity: number,
+    discount: number,
+    discountedPrice: number
 }
 
-export type TAttributeData = {
-    attributeId: number,
-    valueId: number
+export interface IVariantInput {
+    attributes: IVariantAttribute[],
+    product: IVariantProductInput
 }
 
 export interface IProductInput {
@@ -36,13 +37,15 @@ export interface IProductInput {
     pageTitle: string,
     description: string,
     metaDescription: string,
-    price: TPrice,
-    discount: Discount,
+    price: number,
+    discountedPrice: number,
+    discount: number,
     averageRating: number,
     categories: string[],
-    attributes: Attribute[],
+    attributes: any[],
     images: Image[],
-    quantity: number
+    quantity: number,
+    variants: IVariantInput
 };
 
 export interface IProduct extends IProductInput {

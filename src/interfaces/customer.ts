@@ -8,7 +8,7 @@ export interface ICustomerInput {
     password: string,
     loggedIn: boolean,
     addresses: IAddress[],
-    cartId: String
+    cartId: String,
 }
 
 export interface ICustomer extends ICustomerInput {

@@ -1,4 +1,5 @@
 import { Schema, model, Document } from 'mongoose';
+import { IAddress } from '../interfaces/address';
 
 interface ICustomerInput extends Document {
     firstName: string,
@@ -6,7 +7,8 @@ interface ICustomerInput extends Document {
     email: string,
     password: string,
     cartId: string,
-    loggedIn: boolean
+    loggedIn: boolean,
+    addresses: IAddress[]
 }
 
 interface ICustomer extends ICustomerInput {
@@ -19,8 +21,26 @@ const CustomerSchema: Schema = new Schema({
     lastName: { type: String, required: true },
     email: { type: String, required: true },
     password: { type: String, required: true },
-    cartId: { type: String },
-    loggedIn: { type: Boolean, required: true, default: false }
+    cartId: { type: Schema.Types.ObjectId, ref: "Cart" },
+    loggedIn: { type: Boolean, required: true, default: false },
+    addresses: [
+        {
+            firstName: String,
+            lastName: String,
+            email: String,
+            country: String,
+            state: String,
+            city: String,
+            street: String,
+            phone: String,
+            zip: String,
+            firstAddress: String,
+            secondAddress: String,
+            company: String,
+            isBillingAddress: Boolean,
+            isShippingAddress: Boolean
+        }
+    ]
 })
 
 export default model<ICustomerInput | ICustomer>("Customer", CustomerSchema);

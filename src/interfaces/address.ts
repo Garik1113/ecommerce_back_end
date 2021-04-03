@@ -10,5 +10,7 @@ export interface IAddress {
     zip: string,
     firstAddress: string,
     secondAddress: string,
-    company: string
+    company: string,
+    isBillingAddress: boolean,
+    isShippingAddress: boolean
 }

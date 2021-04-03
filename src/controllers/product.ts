@@ -4,9 +4,14 @@ import ErrorHandler from "../models/errorHandler";
 import Product from "../models/product";
 import { IProductInput, IProduct } from "../interfaces/product";
 import ProductDb from '../collections/product';
+import CategoryDb from '../collections/category';
+const ObjectID = require('mongodb').ObjectID;
+import Category from "../models/category";
 import { NextFunction, Request, Response } from "express";
 import { uploadFile } from "../aws/aws";
 import { UploadedFile } from "express-fileupload";
+import { asyncForEach } from '../helpers/asyncForEach';
+import { convertDbCategoryToNormal } from '../common/category';
 
 class ProductController {
     private _DbCollection: Model<any> = Product;
@@ -21,8 +26,15 @@ class ProductController {
             const readyForDbProduct: IProductInput = convertProductObjectToDbFormat(productObject);
             const productDb: Document = await ProductDb.createProduct(readyForDbProduct);
             const product: IProduct = convertDbProductToNormal(productDb);
-
-            res.status(200).json({product})
+            const { categories } = product;
+            await asyncForEach(categories, async (id:string) => {
+                await Category.updateOne({_id: id}, {
+                    $push: {
+                        products: ObjectID(product._id)
+                    }
+                })
+            })
+            res.status(200).json({ product })
         } catch (error) {
             next(error);
         }
@@ -58,20 +70,26 @@ class ProductController {
         }
     }
     public async getProductsByCategory(req: Request, res: Response, next: NextFunction):Promise<IProductInput[] | any> {
-        const { _id } = req.params;
-        const { sort } = req.query;
+        const { category_id } = req.params;
         try {
-            const documents: Document[] = await ProductDb.getProductsByCategory(_id, { sort });
-            const products: IProduct[] = documents.map(convertDbProductToNormal);
-            res.status(200).json({ products });
+            const documents: Document[] = await ProductDb.getProductsByCategory(category_id, req.query);
+            if(category_id) {
+                const categoryResult:Document = await CategoryDb.getCategoryById(category_id);
+                const category = convertDbCategoryToNormal(categoryResult);
+                const products: IProduct[] = documents.map(convertDbProductToNormal);
+                res.status(200).json({ products, totalProducts:  category.products.length});
+            } else {
+                const products: IProduct[] = documents.map(convertDbProductToNormal);
+                res.status(200).json({ products });
+            }
         } catch (error) {
             next(error)
         }
     }
     public async getAllProducts(req: Request, res: Response, next: NextFunction):Promise<IProductInput[] | any> {
-        const { date } = req.query;
+        const { date, ids, name, limit, skip } = req.query;
         try {
-            const documents: Document[] = await ProductDb.getAllProducts({ date });
+            const documents: Document[] = await ProductDb.getAllProducts({ date, ids, name, limit, skip });
             const products: IProduct[] = documents.map(document => convertDbProductToNormal(document));
             res.status(200).json({ products });
         } catch (error) {

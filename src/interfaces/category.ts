@@ -1,6 +1,7 @@
 export interface ICategoryInput {
     name: string,
-    include_in_menu: boolean
+    include_in_menu: boolean,
+    products: string[]
 }
 
 export interface ICategory extends ICategoryInput{

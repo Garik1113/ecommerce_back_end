@@ -23,7 +23,7 @@ export interface ICartInput {
     shippingAddress: IAddress,
     billingAddress: IAddress,
     totalQty: number,
-    totalPrice: TPrice
+    totalPrice: number
 }
 
 export interface ICart extends ICartInput {

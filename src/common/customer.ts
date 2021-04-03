@@ -12,7 +12,7 @@ export const convertCustomerObjecttToDbFormat = (customerObject: any):ICustomerI
         password: hashPassword(customerObject.password),
         cartId: customerObject.cartId,
         loggedIn: false,
-        addresses: []
+        addresses: customerObject.addresses
     };
     return customer;
 }

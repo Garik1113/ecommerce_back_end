@@ -27,6 +27,7 @@ export const uploadFile = (folder: string,  file: UploadedFile): string => {
     }
     s3Bucket.putObject(data, err => {
         if(err) {
+            console.log("AWSSS ERRROOROR", err)
             throw new ErrorHandler(403, "Somenting went wrong when uploading file")
         }
         

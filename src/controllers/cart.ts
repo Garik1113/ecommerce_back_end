@@ -4,10 +4,10 @@ import CartDb from '../collections/cart';
 import { Result, ValidationError, validationResult } from 'express-validator';
 import { NextFunction, Request, Response } from 'express';
 import { ICartInput, ICartItemInput, ICartItem, ICart, TCartItemAttribute } from "../interfaces/cart";
-import { convertCartAttributesToNormal, convertDbCartToNormal, getTotalQtyOfItems, getTotalPriceOfItems, convertInputAddressToNormal, createEmptycart } from "../common/cart";
+import { convertCartAttributesToNormal, convertDbCartToNormal, convertInputAddressToNormal, createEmptycart } from "../common/cart";
 import ProductDB from "../collections/product";
-import { IProduct, TPrice } from "../interfaces/product";
-import { convertDbProductToNormal,  getTotalPriceOfProduct,  isProductConfigurable } from "../common/product";
+import { IProduct } from "../interfaces/product";
+import { convertDbProductToNormal,  getTotalPriceOfProduct } from "../common/product";
 import { isArraysEqual } from "../helpers/isArraysEqual";
 import { IAddress } from "../interfaces/address";
 import { replaceQuotes } from '../helpers/objectId';
@@ -51,7 +51,7 @@ class CartController {
                 };
                 if (!cartObj) {
                     const totalQty = quantity;
-                    const totalPrice: TPrice = getTotalPriceOfProduct(product, quantity);
+                    const totalPrice: number = getTotalPriceOfProduct(product, quantity);
                     const cart: ICartInput =  {
                         ...createEmptycart(),
                         items: [cartItem],
@@ -101,10 +101,7 @@ class CartController {
                             }
                             return cartItem;
                         });
-                        const totalPrice: TPrice = {
-                            currency: "USD",
-                            value: cart.totalPrice.value + (product.price.value * quantity)
-                        }
+                        const totalPrice:number = product.price * quantity
                         const newCart: ICartInput = {
                             ...cart,
                             items: exist ? newCartItems : [...newCartItems, cartItem],

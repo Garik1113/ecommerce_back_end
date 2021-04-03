@@ -9,6 +9,7 @@ import OrderRouter from './order';
 import FilterRouter from './filter';
 import SliderRouter from './slider';
 import ReviewRouter from './review';
+import AttributeRouter from './attribute';
 
 class MainRouter {
     private _router = Router();
@@ -22,6 +23,7 @@ class MainRouter {
     private _subFilterRouter = FilterRouter;
     private _subSliderRouter = SliderRouter;
     private _subReviewRouter = ReviewRouter;
+    private _subAttributeRouter = AttributeRouter;
 
     get router() {
         return this._router;
@@ -42,6 +44,7 @@ class MainRouter {
         this._router.use('/filters', this._subFilterRouter);
         this._router.use('/sliders', this._subSliderRouter);
         this._router.use('/reviews', this._subReviewRouter);
+        this._router.use('/attributes', this._subAttributeRouter);
     }
 }
 

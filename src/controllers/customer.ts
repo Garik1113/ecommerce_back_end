@@ -31,9 +31,10 @@ class CustomerController {
             } else {
                 const cart: Document = await CartDb.creatCart({...createEmptycart()});
                 const cartId: string = cart._id;
+                console.log({...customerDb, cartId })
                 const customerDoc: Document = await CustomerDb.createCustomer({...customerDb, cartId });
                 const customer: ICustomer =  convertDbCustomerToNormal(customerDoc);
-                await CartDb.updateCart(cartId, {customerId: customer._id})
+                await CartDb.updateCart(cartId, { customerId: customer._id })
                 res.status(200).json({ customer });
             }
         } catch (error) {

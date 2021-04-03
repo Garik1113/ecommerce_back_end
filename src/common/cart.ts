@@ -2,15 +2,13 @@ import { IAddress } from "../interfaces/address";
 import { ICartInput, ICart, ICartItemInput, TCartItemAttribute } from "../interfaces/cart";
 import { TPrice } from "../interfaces/product";
 
-export const getTotalPriceOfItems = (items: any[] = []): TPrice => {
+export const getTotalPriceOfItems = (items: any[] = []): number => {
     const value:number = items.reduce((initialState: number, current: ICartItemInput) => {
-            initialState += (current.product.price.value * current.quantity)
-            return initialState;
+        initialState += (current.product.price * current.quantity);
+        return initialState;
     }, 0);
-    return {
-        value,
-        currency: "USD"
-    };
+
+    return value;
 }
 
 export const getTotalQtyOfItems = (items: any[] = []) => {
@@ -52,7 +50,9 @@ export const createEmptycart = (): ICartInput => {
             secondAddress: "",
             phone: "",
             zip: "",
-            company: ""
+            company: "",
+            isBillingAddress: false,
+            isShippingAddress: false
         },
         billingAddress:  {
             firstName: "",
@@ -66,9 +66,11 @@ export const createEmptycart = (): ICartInput => {
             secondAddress: "",
             phone: "",
             zip: "",
-            company: ""
+            company: "",
+            isBillingAddress: false,
+            isShippingAddress: false
         },
-        totalPrice: {value: 0, currency: "USD"},
+        totalPrice: 0,
         totalQty: 0,
         customerId: null
     };
@@ -99,6 +101,8 @@ export const convertInputAddressToNormal = (address: any): IAddress => {
         secondAddress: address.secondAddress || "",
         phone: address.phone || "",
         zip: address.zip || "",
-        company: address.company || ""
+        company: address.company || "",
+        isBillingAddress: address.isBillingAddress,
+        isShippingAddress: address.isShippingAddress
     }
 }

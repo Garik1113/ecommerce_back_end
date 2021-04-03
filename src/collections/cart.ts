@@ -1,7 +1,6 @@
 import { Model, Document } from "mongoose"
 import Cart from "../models/cart"
 import { ICartInput, ICart, ICartItemInput } from "../interfaces/cart";
-import { Attribute } from "../interfaces/product";
 
 class CartDb {
     protected _db: Model<any> = Cart;
@@ -54,7 +53,7 @@ class CartDb {
             }
         );
     }
-    async updateAttributesOfCartItem (cartId: string, newAttributes: Attribute[], itemId: string) {
+    async updateAttributesOfCartItem (cartId: string, newAttributes: any, itemId: string) {
         await Cart.findByIdAndUpdate(
             { _id: cartId }, 
             {$set: {"items.$[item].attributes": newAttributes}},
