@@ -1,11 +1,20 @@
-import { ICartInput } from './cart';
+import { IAddress } from './address';
+import { ICartItemInput } from './cart';
+import { ICustomer } from './customer';
 
-export interface IOrderInput extends ICartInput {
+export interface IOrderInput {
+    customer: ICustomer | null,
+    items: ICartItemInput[],
+    paymentMethod: string,
+    shippingAddress: IAddress,
+    billingAddress: IAddress,
+    totalQty: number,
+    totalPrice: number
     cartId: string,
-    customerId: string | null,
     status: string
 }
 
 export interface IOrder extends IOrderInput {
+    createdAt: string,
     _id: string
 }

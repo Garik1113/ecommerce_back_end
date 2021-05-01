@@ -1,7 +1,7 @@
 import { Schema, Document, model } from 'mongoose';
 import { IAddress } from '../interfaces/address';
 import { ICartItemInput, ICartItem } from '../interfaces/cart';
-import { TPrice } from '../interfaces/product';
+import { ICustomer } from '../interfaces/customer';
 
 interface IOrderInput extends Document {
     items: ICartItemInput[],
@@ -9,10 +9,10 @@ interface IOrderInput extends Document {
     shippingAddress: IAddress,
     billingAddress: IAddress,
     totalQty: number,
-    totalPrice: TPrice,
+    totalPrice: number,
     status: string,
     cartId: string,
-    customerId: string
+    customer: ICustomer
 };
 
 interface IOrder extends IOrderInput {
@@ -24,37 +24,21 @@ const OrderSchem: Schema = new Schema({
     items:  [
         { 
             id: String,
-            product: { 
-                type: Schema.Types.ObjectId,
-                ref: "Product"
-            },
-            quantity: { type: Number },
-            cartItemAttributes: [
-                {
-                    attributeId: {
-                        type: String
-                    },
-                    valueId: {
-                        type: String
-                    }
-                }
-            ]
+            product: {  type: {} },
+            quantity: { type: Number }
         }
     ],
+    customer: { type: {}},
     paymentMethod: { type: String },
     shippingAddress: { type: {} },
     billingAddress: { type: {} },
     totalQty: { type: Number },
-    totalPrice: { type: {} },
+    totalPrice: { type: Number },
     status: { type: String, default: "pending" },
     cartId: { 
         type: Schema.Types.ObjectId,
         ref: "Cart" 
-    },
-    customerId: { 
-        type: Schema.Types.ObjectId,
-        ref: "Customer" 
     }
-}, {timestamps: true});
+}, { timestamps: true });
 
 export default model<IOrder | IOrderInput>('Order', OrderSchem);

@@ -20,14 +20,15 @@ class ProductRouter {
         this._router.get('/admin/get_products', verifyToken, this._controller.getAllProducts);
         this._router.get('/admin/get_product/:_id', verifyToken, this._controller.getProductById);
         this._router.put('/admin/update/:_id', verifyToken, this._controller.updateProduct);
-        this._router.get('/admin/products_by_category/:_id', verifyToken, this._controller.getProductsByCategory);
+        this._router.get('/admin/products_by_category/:_id', verifyToken, this._controller.getProducts);
         this._router.delete('/admin/:_id', verifyToken, this._controller.deleteProduct);
         this._router.post('/admin/upload_image', verifyToken, this._controller.uploadImage);
         //Customer Routes
-        this._router.get('/get_products/:category_id', this._controller.getProductsByCategory);
-        this._router.get('/get_products/', this._controller.getProductsByCategory);
+        this._router.get('/get_products/:category_id', this._controller.getProducts);
+        this._router.get('/get_products/', this._controller.getProducts);
         this._router.get('/', this._controller.getAllProducts);
         this._router.get('/get_product/:_id', this._controller.getProductById);
+        this._router.get('/search', this._controller.searchProduct);
         
     }
 }

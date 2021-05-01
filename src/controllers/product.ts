@@ -1,20 +1,18 @@
 import { Model, Document } from "mongoose";
 import { convertDbProductToNormal, convertProductObjectToDbFormat, getFiltersFromParams } from "../common/product";
 import ErrorHandler from "../models/errorHandler";
-import Product from "../models/product";
 import { IProductInput, IProduct } from "../interfaces/product";
 import ProductDb from '../collections/product';
 import CategoryDb from '../collections/category';
 const ObjectID = require('mongodb').ObjectID;
 import Category from "../models/category";
 import { NextFunction, Request, Response } from "express";
-import { uploadFile } from "../aws/aws";
-import { UploadedFile } from "express-fileupload";
 import { asyncForEach } from '../helpers/asyncForEach';
 import { convertDbCategoryToNormal } from '../common/category';
+import { uploadImage } from "../helpers/uploadImage";
+
 
 class ProductController {
-    private _DbCollection: Model<any> = Product;
     defaulMethod() {
         return {
             text:`You'ave reached the ${this.constructor.name} default method`
@@ -44,7 +42,6 @@ class ProductController {
         try {
             const document: Document = await ProductDb.getProductById(_id);
             const product: IProduct = convertDbProductToNormal(document);
-
             res.status(200).json({ product })
         } catch (error) {
             next(error)
@@ -69,15 +66,15 @@ class ProductController {
             next(error);
         }
     }
-    public async getProductsByCategory(req: Request, res: Response, next: NextFunction):Promise<IProductInput[] | any> {
+    public async getProducts(req: Request, res: Response, next: NextFunction):Promise<IProductInput[] | any> {
         const { category_id } = req.params;
         try {
-            const documents: Document[] = await ProductDb.getProductsByCategory(category_id, req.query);
-            if(category_id) {
+            const documents: Document[] = await ProductDb.getProducts(category_id, req.query);
+            if (category_id) {
                 const categoryResult:Document = await CategoryDb.getCategoryById(category_id);
                 const category = convertDbCategoryToNormal(categoryResult);
                 const products: IProduct[] = documents.map(convertDbProductToNormal);
-                res.status(200).json({ products, totalProducts:  category.products.length});
+                res.status(200).json({ products, totalProducts:  products.length});
             } else {
                 const products: IProduct[] = documents.map(convertDbProductToNormal);
                 res.status(200).json({ products });
@@ -96,11 +93,21 @@ class ProductController {
             next(error)
         }
     }
+    public async searchProduct(req: Request, res: Response, next: NextFunction):Promise<void> {
+        const { search_query } = req.query;
+        try {
+            const results: Document[] = await ProductDb.searchProduct(search_query);
+            res.status(200).json({products: results})
+        } catch (error) {
+            next(error)
+        }
+    }
     public async uploadImage(req: Request, res: Response, next: NextFunction):Promise<void> {
         try {
             if (req.files) {
                 if(req.files.image) {
-                    const fileName: string = await uploadFile("products", req.files.image as UploadedFile);
+                    const image: any = await req.files.image;
+                    const fileName = await uploadImage('product', image)
                     res.status(200).json({ fileName })
                 }
             } else {

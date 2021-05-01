@@ -10,6 +10,7 @@ import FilterRouter from './filter';
 import SliderRouter from './slider';
 import ReviewRouter from './review';
 import AttributeRouter from './attribute';
+import LocationRoutes from './locations';
 
 class MainRouter {
     private _router = Router();
@@ -24,6 +25,8 @@ class MainRouter {
     private _subSliderRouter = SliderRouter;
     private _subReviewRouter = ReviewRouter;
     private _subAttributeRouter = AttributeRouter;
+    private _subLocationRouter = LocationRoutes
+
 
     get router() {
         return this._router;
@@ -45,6 +48,7 @@ class MainRouter {
         this._router.use('/sliders', this._subSliderRouter);
         this._router.use('/reviews', this._subReviewRouter);
         this._router.use('/attributes', this._subAttributeRouter);
+        this._router.use('/locations', this._subLocationRouter);
     }
 }
 

@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { IAddress } from '../interfaces/address';
 import { ICustomer, ICustomerInput } from '../interfaces/customer';
 
 export const hashPassword = (password: string) => bcrypt.hashSync(password, 12);
@@ -27,6 +28,25 @@ export const convertDbCustomerToNormal = (dbCustomer: any):ICustomer => {
         cartId: dbCustomer.cartId,
         loggedIn: dbCustomer.loggedIn,
         addresses: dbCustomer.addresses
+    };
+    return customer;
+}
+export const convertCustomerAddressToDbFormat = (addressObj: any):IAddress => {
+    const customer: IAddress = {
+        firstName: addressObj.firstName,
+        lastName: addressObj.lastName,
+        email: addressObj.email,
+        country: addressObj.country,
+        state: addressObj.state,
+        city: addressObj.city,
+        street: addressObj.street,
+        phone: addressObj.phone,
+        zip: addressObj.zip,
+        firstAddress: addressObj.firstAddress,
+        secondAddress: addressObj.secondAddress,
+        company: addressObj.company,
+        isBillingAddress: addressObj.isBillingAddress,
+        isShippingAddress: addressObj.isShippingAddress
     };
     return customer;
 }

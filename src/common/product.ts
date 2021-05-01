@@ -33,7 +33,6 @@ const makeAttributeReadyForDb = (attributes: any[] = []) => {
         pageTitle: productObj.pageTitle || "",
         description: productObj.description || "",
         metaDescription: productObj.metaDescription,
-        attributes: makeAttributeReadyForDb(productObj.attributes) || [],
         price: productObj.price || 0,
         discountedPrice: productObj.discountedPrice || 0,
         discount: productObj.discount || 0,
@@ -41,7 +40,7 @@ const makeAttributeReadyForDb = (attributes: any[] = []) => {
         categories: productObj.categories || [],
         images: makeImageReadyForDb(productObj.images) || [],
         quantity: productObj.quantity || 0,
-        variants: productObj.variants
+        configurableAttributes: productObj.configurableAttributes
     }
     return product;
 }
@@ -54,20 +53,15 @@ export const convertDbProductToNormal = (productDb: any):IProduct => {
         pageTitle: productDb.pageTitle || "",
         description: productDb.description || "",
         metaDescription: productDb.metaDescription || "",
-        attributes: productDb.attributes || [],
         price: productDb.price || 0,
         discount: productDb.discount || 0,
         averageRating: productDb.averageRating || 1,
         categories: productDb.categories || [],
         images: productDb.images || [],
         quantity: productDb.quantity || 0,
-        variants: productDb.variants
+        configurableAttributes: productDb.configurableAttributes
     }
     return product;
-}
-
-export const isProductConfigurable = (product: IProductInput):boolean => {
-    return product.attributes.length > 0;
 }
 
 export const getTotalPriceOfProduct = (product: IProduct, quantity: number): number => {
@@ -83,8 +77,4 @@ export const getFiltersFromParams = (filterParam:any) => {
             }
         }
     }
-}
-
-export const getAggregationForProduct = (params: any) => {
-
 }

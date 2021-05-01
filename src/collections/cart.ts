@@ -16,25 +16,43 @@ class CartDb {
             return cart;  
         }
     }
+    async getCartByCustomer(customerId: string): Promise<Document | any> {
+        if(customerId) {
+            const cart: Document = await Cart.findOne({customerId});
+            return cart;  
+        }
+    }
     async addItemToCart (cartId: string, item: ICartItemInput) {
         await Cart.findByIdAndUpdate(cartId, { $push: { items: item } });
     }
     async getCartById (cartId: string): Promise<Document | any> {
         if (cartId) {
-            const cart: Document = await Cart.findById(cartId).populate("items.product");
+            const cart: Document = await Cart.findById(cartId).populate("items.product")
+            return cart;
+        }
+    }
+    async getCartForOrder (cartId: string): Promise<Document | any> {
+        if (cartId) {
+            const cart: Document = await Cart.findById(cartId).populate("items.product").populate("customerId");
             return cart;
         }
     }
     async updateCart (cartId: string, body: any ) {
-        const updateQuery:any = {};
-            for (const key in body) {
-                if (Object.prototype.hasOwnProperty.call(body, key)) {
-                    const element = body[key];
-                    updateQuery[key] = element;
-                }
-            };
-        const result: Document = await Cart.findByIdAndUpdate({"_id": cartId}, updateQuery);
-        return result;
+        try {
+            const updateQuery:any = {};
+                for (const key in body) {
+                    if (Object.prototype.hasOwnProperty.call(body, key)) {
+                        const element = body[key];
+                        updateQuery[key] = element;
+                    }
+                };
+                delete updateQuery._id
+            const result: Document = await Cart.findByIdAndUpdate({ "_id": cartId }, updateQuery);
+            return result;
+        } catch (error) {
+            console.log("error", error)
+        }
+        
     }
     async addItemQuantityToCart (cartId: string, itemId: string | undefined, quantity: number) {
         await Cart.findByIdAndUpdate(

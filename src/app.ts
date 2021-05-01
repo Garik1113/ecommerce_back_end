@@ -8,6 +8,7 @@ import expressUpload from 'express-fileupload';
 import config from 'config';
 import { getTokenFromRequest } from './helpers/jwt';
 import jwt  from 'jsonwebtoken';
+import path from 'path';
 import Stripe from 'stripe';
 const stripe: Stripe = require('stripe')("sk_test_51HPTvgB9AM6FXiSYbUwoiPaWX2zDSwVc7dYCEv70AHU7y5hrowWbkO5pdUyFfmlf00PM1CxOw9azGLDXSD6z1qIu00IEozmq5c");
 
@@ -30,30 +31,26 @@ app.use(bodyParser.json());
 app.use(cors());
 
 app.use(expressUpload())
-
+app.use(express.static(path.resolve(__dirname, '../images')))
+app.use('/images', express.static(path.resolve(__dirname, '../images'))); 
 //support application/x-www-form-urlencoded post data
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/stripe/payment", async(req: Request, res: Response) => {
-    const {id, amount} = req.body;
-    const payment = await stripe.paymentIntents.create({
+    const { id, amount } = req.body;
+    
+    await stripe.paymentIntents.create({
         amount,
         currency: "USD",
         description: "My shop description",
         payment_method: id
-    })
+    });
     res.json({
         message: "OK"
     })
 })
 app.use("*", async(req: Request, res: Response, next: NextFunction) => {
     const token: string | undefined = getTokenFromRequest(req);
-    let customer = false;
-    let user = false;
     if (token) {
-        // const customerId = jwt.verify(token, config.get("CUSTOMER_SECRET_TOKEN"));
-        // console.log("CUSTOMER ID", customerId);
-        // const userId = jwt.verify(token, config.get("ACCESS_SECRET_TOKEN"));
-        // console.log("USER IDD", userId)
         jwt.verify(token, config.get("CUSTOMER_SECRET_TOKEN"), (err: any, customerId: any) => {
             if (customerId) {
                req.body.customerId = customerId;
@@ -65,22 +62,6 @@ app.use("*", async(req: Request, res: Response, next: NextFunction) => {
             }
         }) 
     }
-    // const customerId = 
-    // console.log("TOKENEENEN", token)
-    // if(token) {
-    //     jwt.verify(token, config.get("ACCESS_SECRET_TOKEN"), (err: any, user: any) => {
-    //         if (user) {
-                
-    //         req.body.userId = String(user);
-    //         next()
-    //         } else {
-    //         throw new ErrorHandler(403, "Invalid Token")
-    //         }
-    //     }) 
-    // }
-    
-
-    // console.log(req.headers);
     next()
 })
 app.use('/', router);
@@ -99,4 +80,4 @@ const start = async () => {
     await Database.connect(); 
 };
 
-start();
+start()

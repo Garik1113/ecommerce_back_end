@@ -1,10 +1,10 @@
 import { IAddress } from "../interfaces/address";
 import { ICartInput, ICart, ICartItemInput, TCartItemAttribute } from "../interfaces/cart";
-import { TPrice } from "../interfaces/product";
 
 export const getTotalPriceOfItems = (items: any[] = []): number => {
     const value:number = items.reduce((initialState: number, current: ICartItemInput) => {
-        initialState += (current.product.price * current.quantity);
+        const price = current.product.discountedPrice || current.product.price;
+        initialState += (price * current.quantity);
         return initialState;
     }, 0);
 
@@ -28,7 +28,8 @@ export const convertDbCartToNormal = (cartObj: any = {}): ICart => {
         billingAddress: cartObj.billingAddress,
         customerId: cartObj.customerId,
         totalPrice: getTotalPriceOfItems(cartObj.items),
-        totalQty: getTotalQtyOfItems(cartObj.items)
+        totalQty: getTotalQtyOfItems(cartObj.items),
+        stripePaymentMethodId: cartObj.stripePaymentMethodId
     };
 
     return cart;
@@ -76,16 +77,6 @@ export const createEmptycart = (): ICartInput => {
     };
 
     return cart;
-}
-
-
-export const convertCartAttributesToNormal = (attributes: any[] = []): TCartItemAttribute[] => {
-    return attributes.map(e => {
-        return {
-            attributeId: String(e.attributeId),
-            valueId: String(e.valueId)
-        }
-    })
 }
 
 export const convertInputAddressToNormal = (address: any): IAddress => {

@@ -7,6 +7,8 @@ import { convertDbSliderToNormal } from "../common/slider";
 import ErrorHandler from "../models/errorHandler";
 import { ISlider, ISliderInput } from '../interfaces/sliders';
 import { convertSliderObjectToDb } from '../common/slider';
+import fs from 'fs';
+import { uploadImage } from "../helpers/uploadImage";
 
 class SliderController {
     protected _db: typeof SliderDb = SliderDb;
@@ -75,7 +77,8 @@ class SliderController {
         try {
             if (req.files) {
                 if (req.files.image) {
-                    const fileName: string = await uploadFile('sliders', req.files.image as UploadedFile);
+                    const image: any = await req.files.image;
+                    const fileName = await uploadImage('slider', image)
                     res.status(200).json({ fileName })
                 }
             } else {

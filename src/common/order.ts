@@ -1,12 +1,12 @@
-import { ICart } from '../interfaces/cart';
 import { IOrder, IOrderInput } from '../interfaces/order';
+import { convertDbCustomerToNormal } from './customer';
 
-export const convertCartToOrder = (cart: ICart):IOrderInput => {
+export const convertCartToOrder = (cart: any):IOrderInput => {
     return {
         cartId: cart._id,
         shippingAddress: cart.shippingAddress,
         billingAddress: cart.billingAddress,
-        customerId: cart.customerId,
+        customer: cart.customerId ? convertDbCustomerToNormal(cart.customerId) : null,
         paymentMethod: cart.paymentMethod,
         totalPrice: cart.totalPrice,
         totalQty: cart.totalQty,
@@ -21,11 +21,12 @@ export const convertDbOrderToNormal = (orderObj: any):IOrder => {
         cartId: orderObj._id,
         shippingAddress: orderObj.shippingAddress,
         billingAddress: orderObj.billingAddress,
-        customerId: orderObj.customerId,
+        customer: orderObj.customer,
         paymentMethod: orderObj.paymentMethod,
         totalPrice: orderObj.totalPrice,
         totalQty: orderObj.totalQty,
         items: orderObj.items,
-        status: orderObj.status
+        status: orderObj.status,
+        createdAt: orderObj.createdAt
     }
 }

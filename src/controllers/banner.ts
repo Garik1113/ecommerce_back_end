@@ -6,6 +6,7 @@ import BannerDb from '../collections/banner';
 import { convertBannerObjectToDb, convertDbBannerToNormal } from "../common/banner";
 import ErrorHandler from "../models/errorHandler";
 import { IBannerInput } from "../interfaces/banner";
+import { uploadImage } from "../helpers/uploadImage";
 
 class BannerController {
     protected _db: typeof BannerDb = BannerDb;
@@ -65,7 +66,8 @@ class BannerController {
         try {
             if (req.files) {
                 if (req.files.image) {
-                    const fileName: string = await uploadFile('banners', req.files.image as UploadedFile);
+                    const image: any = await req.files.image;
+                    const fileName = await uploadImage('banner', image)
                     res.status(200).json({ fileName })
                 }
             } else {

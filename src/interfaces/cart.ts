@@ -1,5 +1,5 @@
 import { IAddress } from "./address";
-import { TPrice, IProduct } from "./product";
+import { IProduct } from "./product";
 
 export type TCartItemAttribute = {
     attributeId: string,
@@ -8,8 +8,7 @@ export type TCartItemAttribute = {
 
 export interface ICartItemInput {
     quantity: number,
-    product: IProduct,
-    cartItemAttributes: TCartItemAttribute[]
+    product: IProduct
 }
 
 export interface ICartItem extends ICartItemInput {
@@ -27,6 +26,7 @@ export interface ICartInput {
 }
 
 export interface ICart extends ICartInput {
-    _id: string
+    _id: string,
+    stripePaymentMethodId: string,
     items: ICartItem[]
 }

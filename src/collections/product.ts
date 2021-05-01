@@ -48,9 +48,8 @@ class ProductDb {
             throw new ErrorHandler(401, error.message)
         }
     }
-    async getProductsByCategory (category_id: String, params: any): Promise<Document[]> {
+    async getProducts (category_id: String, params: any): Promise<Document[]> {
         const { date, ids, name, sort, limit, page, perPage=1, discount, price_min, price_max } = params;
-        console.log(price_min)
         const matchParams: any = {
             $match: {},
         };
@@ -83,6 +82,13 @@ class ProductDb {
                 $lt: Number(price_max)
             };
         }
+        if (name) {
+            matchParams.$match = {
+                name: { 
+                    $search: "/" + replaceQuotes(name) + "/"
+                }
+            }
+        }
         aggr.push(matchParams)
         if (date == "latest") {
             sortParams.$sort.createdAt = -1;
@@ -91,15 +97,12 @@ class ProductDb {
             sortParams.$sort.createdAt = 1;
             aggr.push(sortParams)
         }
-
         if (page) {
             aggr.push({$skip: Number(page) * Number(limit)})
         }
         if(limit) {
             aggr.push({$limit: Number(limit)})
         }
-        
-        console.log(JSON.stringify(aggr))
         const items: Document[] = await this._db.aggregate(aggr);
         return items;
     }
@@ -137,6 +140,26 @@ class ProductDb {
         console.log(aggr)
         const items: Document[] = await this._db.aggregate(aggr);
         return items;
+    }
+    async searchProduct (searchQuery: any):Promise<Document[]> {
+        try {
+            const documents: Document[] = await this._db.aggregate([
+                {
+                    $match: {
+                        $text: {
+                            // $search: {
+                            //     $regex: eval("/" + searchQuery + "/")
+                            // }
+                            $search: searchQuery
+                        }
+                    }
+                }
+            ])
+            return documents;  
+        } catch (error) {
+            throw new ErrorHandler(401, error.message)
+        }
+        
     }
 }
 
