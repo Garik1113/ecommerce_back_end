@@ -27,7 +27,7 @@ class OrderController {
             const { stripePaymentMethodId, totalPrice } = cart;
             if (stripePaymentMethodId) {
                 await stripe.paymentIntents.create({
-                    amount: totalPrice,
+                    amount: Math.ceil(totalPrice),
                     currency: "USD",
                     description: "Ecommerce payment",
                     payment_method: stripePaymentMethodId

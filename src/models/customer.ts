@@ -34,8 +34,8 @@ const CustomerSchema: Schema = new Schema({
             street: String,
             phone: String,
             zip: String,
-            firstAddress: String,
-            secondAddress: String,
+            address: String,
+            additionalInformation: String,
             company: String,
             isBillingAddress: Boolean,
             isShippingAddress: Boolean

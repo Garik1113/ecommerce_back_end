@@ -8,9 +8,69 @@ import { convertDbCartToNormal, convertInputAddressToNormal, createEmptycart } f
 import ProductDB from "../collections/product";
 import { IProduct } from "../interfaces/product";
 import { convertDbProductToNormal,  getTotalPriceOfProduct } from "../common/product";
-import { isArraysEqual } from "../helpers/isArraysEqual";
 import { IAddress } from "../interfaces/address";
 import { replaceQuotes } from '../helpers/objectId';
+const ObjectID = require('mongodb').ObjectID;
+
+const prepareCartBeforeSending = async (cartObj:any = {}): Promise<ICart>  => {
+    const { items } = cartObj;
+    const itemsWithProducts: ICartItem[] = []
+
+    for (let index = 0; index < items?.length; index++) {
+        const item = items[index];
+        const productResult = await ProductDB.getProductById(item.product);
+        const product = productResult ?  await convertDbProductToNormal(productResult) : "";
+        const readyItem:ICartItem = {
+            _id: item._id,
+            quantity: item.quantity,
+            product
+        }
+        itemsWithProducts.push(readyItem)
+    }
+    return {
+        _id: cartObj._id,
+        items: itemsWithProducts,
+        paymentMethod: cartObj.paymentMethod,
+        shippingMethod: cartObj.shippingMethod,
+        shippingAddress: cartObj.shippingAddress,
+        billingAddress: cartObj.billingAddress,
+        customerId: cartObj.customerId,
+        subTotal: cartObj.subTotal,
+        totalPrice: cartObj.totalPrice,
+        totalQty: cartObj.totalQty,
+        stripePaymentMethodId: cartObj.stripePaymentMethodId,
+        currency: cartObj.currency
+    };
+}
+
+const gerProductPrice = (product: any) => {
+    return product.discountedPrice ? Number(product.discountedPrice) : Number(product.price)
+}
+
+const collectTotals = (cart: ICart): ICart => {
+    const { shippingMethod, items } = cart;
+    let shippingPrice = 0;
+    let subTotal = 0;
+    let totalQty = 0;
+    let totalPrice = 0;
+    if (shippingMethod) {
+        shippingPrice = Number(shippingMethod.price.toFixed(2))
+    };
+    for (let index = 0; index < items.length; index++) {
+        const item:ICartItem = items[index];
+        const { quantity, product } = item;
+        const price = Number(gerProductPrice(product).toFixed(2)) * Number(quantity);
+        subTotal += price;
+        totalQty += Number(quantity)
+    }
+    totalPrice = subTotal + shippingPrice;
+    return {
+        ...cart,
+        subTotal,
+        totalPrice,
+        totalQty
+    }
+}
 
 class CartController {
     defaulMethod() {
@@ -28,16 +88,18 @@ class CartController {
             next(error);
         }
     }
+    
     public async addItemToCart(req: Request, res: Response, next: NextFunction):Promise<void> {
         const errors: Result<ValidationError> = validationResult(req);
         try {
             const { cartId, productId, quantity, customerId } = req.body;
             if (!errors.isEmpty()) {
-                throw new ErrorHandler(403, "Validation error", errors.array())
+                throw new ErrorHandler(203, "Validation error", errors.array())
             }
-            const productDb: Document = await ProductDB.getProductById(productId);
+            const productDb: Document = await ProductDB.getProductById(ObjectID(productId));
+            const product: IProduct = convertDbProductToNormal(productDb);
             if (!productDb) {
-                throw new ErrorHandler(403, "Product that you tried to add is not exists")
+                throw new ErrorHandler(203, "Product that you tried to add is not exists")
             } else {
                 let cartObj;
                 if (customerId) {
@@ -45,54 +107,56 @@ class CartController {
                 } else {
                     cartObj = await CartDb.getCartById(cartId);
                 }
-                const product: IProduct = convertDbProductToNormal(productDb);
                 if(product.quantity < 1) {
                     throw new ErrorHandler(203, "Product that you tried to add is Out of stock")
                 }
-                const cartItem: ICartItemInput = {
-                    quantity,
-                    product: productId
-                };
+                
                 if (!cartObj) {
-                    const totalQty = quantity;
+                    const cartItem: ICartItemInput = {
+                        quantity,
+                        product: productId
+                    };
                     const totalPrice: number = getTotalPriceOfProduct(product, quantity);
                     const cart: ICartInput =  {
                         ...createEmptycart(),
                         items: [cartItem],
-                        totalQty,
-                        totalPrice,
+                        subTotal: Number((quantity * gerProductPrice(product)).toFixed(2)),
+                        totalQty: quantity,
+                        totalPrice: Number(totalPrice.toFixed(2)),
                         customerId: customerId ? replaceQuotes(customerId) : null
                     }
                     const cartDb: Document = await CartDb.creatCart(cart);
-                    res.status(200).json({ cartId: cartDb._id });
+                    const newCart:ICart = await prepareCartBeforeSending(cartDb);
+                    res.status(200).json({ cart: newCart });
                 } else {
                     const cart = convertDbCartToNormal(cartObj);
-                    const cartItems:ICartItem[] = cart.items;
-                    let totalQty = 0;
+                    const { items } = cart;
                     let exist = false;
-                    const newCartItems:ICartItem[] = cartItems.map((cartItem: ICartItem) => {
-                        totalQty += cartItem.quantity;
-                        if (cartItem.product._id == productId) {
+                    for (let index = 0; index < items.length; index++) {
+                        const item = items[index];
+                        if (item.product == productId) {
                             exist = true;
-                            const incrementError: boolean = cartItem.product.quantity <= cartItem.quantity + quantity;
-                            const decrementError: boolean = cartItem.quantity + quantity <= 0;
-                            if (incrementError || decrementError) {
-                                throw new ErrorHandler(203, "Change quantity error");
-                            } else {
-                                 cartItem.quantity += quantity;
+                            const incError = item.quantity + Number(quantity) > product.quantity
+                            const decError = item.quantity + Number(quantity) < 0;
+                            if (incError || decError) {
+                                throw new ErrorHandler(203, "Change Quantity Error")
                             }
+                            item.quantity += Number(quantity);
+                            break;
                         }
-                        return cartItem;
-                    });
-                    const totalPrice:number = product.price * quantity
-                    const newCart: ICartInput = {
-                        ...cart,
-                        items: exist ? newCartItems : [...newCartItems, cartItem],
-                        totalQty: cart.totalQty + quantity,
-                        totalPrice
                     }
-                    await CartDb.updateCart(cartId, newCart)
-                    res.status(200).json({ cartId });
+                    if (!exist) {
+                        cart.items.push({
+                            product: productId,
+                            quantity
+                        })
+                    }
+                    const cartBeforeUpdate = await prepareCartBeforeSending(cart);
+                    const fixedCart = await collectTotals(cartBeforeUpdate);
+                    delete fixedCart._id
+                    const newCartResult = await CartDb.updateCartFixed(cart._id || "", fixedCart);
+                    const newCart = await prepareCartBeforeSending(newCartResult);
+                    res.status(200).json({ cart: newCart });
                 }
             }
         } catch (error) {
@@ -100,10 +164,27 @@ class CartController {
         }
     }
     public async deleteCartItem(req: Request, res: Response, next: NextFunction): Promise<void> {
-        const {cartId, itemId} = req.body;
+        const { cartId, itemId } = req.body;
         try {
-            await CartDb.deleteCartItem(cartId, itemId);
-            res.status(200).json({ cartId });
+            const result:Document = await CartDb.getCartById(cartId);
+            if (!result) {
+                throw new ErrorHandler(203, "Cart not found");
+            }
+            const cart:ICart = convertDbCartToNormal(result);
+            let newCart = cart;
+            const findedItem = cart.items.find(e => e._id == itemId);
+            if (findedItem) {
+                const { quantity } = findedItem;
+                const productResult = await ProductDB.getProductById(String(findedItem.product));
+                const product = await convertDbProductToNormal(productResult);
+                cart.items = cart.items.filter(e => e._id != itemId);
+                delete cart._id;
+                const cartBeforeUpdate = await prepareCartBeforeSending(cart);
+                const fixedCart = await collectTotals(cartBeforeUpdate);
+                const newCartResult = await CartDb.updateCartFixed(cartId, fixedCart);
+                newCart = await prepareCartBeforeSending(newCartResult);
+            }
+            res.status(200).json({ cart: newCart });
         } catch (error) {
             next(error)
         }
@@ -113,10 +194,10 @@ class CartController {
         try {
             const result:Document = await CartDb.getCartById(cartId);
             if (result) {
-                const cart: ICart = convertDbCartToNormal(result);
+                const cart: ICart = await prepareCartBeforeSending(result);
                 res.status(200).json({ cart });
             } else {
-                res.status(200).json({ cart: {} });
+                res.status(200).json({ cart: null });
             }
         } catch (error) {
             console.log(error)
@@ -126,8 +207,24 @@ class CartController {
     public async changeCartItemQuantity(req: Request, res: Response, next: NextFunction): Promise<void> {
         const { cartId, itemId, quantity } = req.body;
         try {
-            await CartDb.addItemQuantityToCart(cartId, itemId, Number(quantity));
-            res.status(200).json({ cartId });
+            const cartDb = await CartDb.getCartById(cartId);
+            const cart: ICart = convertDbCartToNormal(cartDb);
+            const { items } = cart;
+            for (let index = 0; index < items.length; index++) {
+                const item = items[index];
+                if (item._id == itemId) {
+                    const { product } = item;
+                    const productDb = await ProductDB.getProductById(String(product));
+                    const productResult = convertDbProductToNormal(productDb);
+                    item.quantity += Number(quantity);
+                    break;
+                }
+            }
+            const cartBeforeUpdate = await prepareCartBeforeSending(cart);
+            const fixedCart = await collectTotals(cartBeforeUpdate);
+            const newCartResult = await CartDb.updateCartFixed(cartId, fixedCart);
+            const newCart = await prepareCartBeforeSending(newCartResult);
+            res.status(200).json({ cart: newCart});
         } catch (error) {
             next(error);
         }
@@ -141,8 +238,9 @@ class CartController {
                 throw new ErrorHandler(203, "Cart not found");
             }
             const cart:ICart = convertDbCartToNormal(result);
-            await CartDb.updateCart(cartId, {...cart, shippingAddress})
-            res.status(200).json({ cartId });
+            const newCartResult: Document = await CartDb.updateCartFixed(cartId, {...cart, shippingAddress});
+            const newCart:ICart = await prepareCartBeforeSending(newCartResult);
+            res.status(200).json({ cart: newCart })
         } catch (error) {
             next(error);
         }
@@ -156,8 +254,9 @@ class CartController {
                 throw new ErrorHandler(203, "Cart not found");
             }
             const cart:ICart = convertDbCartToNormal(result);
-            await CartDb.updateCart(cartId, {...cart, billingAddress})
-            res.status(200).json({ cartId });
+            const newCartResult: Document = await CartDb.updateCartFixed(cartId, {...cart, billingAddress});
+            const newCart:ICart = await prepareCartBeforeSending(newCartResult);
+            res.status(200).json({ cart: newCart });
         } catch (error) {
             next(error);
         }
@@ -170,8 +269,28 @@ class CartController {
                 throw new ErrorHandler(203, "Cart not found");
             }
             const cart:ICart = convertDbCartToNormal(result);
-            await CartDb.updateCart(cartId, {...cart, paymentMethod: method})
-            res.status(200).json({ cartId });
+            const newCartResult: Document = await CartDb.updateCartFixed(cartId, {...cart, paymentMethod: method});
+            const newCart:ICart = await prepareCartBeforeSending(newCartResult);
+            res.status(200).json({ cart: newCart });
+        } catch (error) {
+            next(error);
+        }
+    }
+    public async addShippingMethod(req: Request, res: Response, next: NextFunction): Promise<void> {
+        const { cartId, method } = req.body;
+        try {
+            const result = await CartDb.getCartById(cartId);
+            if (!result) {
+                throw new ErrorHandler(203, "Cart not found");
+            }
+            result.shippingMethod = method;
+            const cartBeforeUpdate = await prepareCartBeforeSending(result);
+            const fixedCart = await collectTotals(cartBeforeUpdate);
+            delete fixedCart._id
+            
+            const newCartResult = await CartDb.updateCartFixed(cartId, fixedCart);
+            const newCart:ICart = await prepareCartBeforeSending(newCartResult);
+            res.status(200).json({ cart: newCart });
         } catch (error) {
             next(error);
         }
@@ -184,8 +303,9 @@ class CartController {
                 throw new ErrorHandler(203, "Cart not found");
             }
             const cart:ICart = convertDbCartToNormal(result);
-            await CartDb.updateCart(cartId, {...cart, stripePaymentMethodId, paymentMethod: "credit_card" })
-            res.status(200).json({ cartId });
+            const newCartResult: Document = await CartDb.updateCartFixed(cartId, {...cart, stripePaymentMethodId});
+            const newCart:ICart = await prepareCartBeforeSending(newCartResult);
+            res.status(200).json({ cart: newCart });
         } catch (error) {
             next(error);
         }
@@ -194,7 +314,7 @@ class CartController {
         const { cartId } = req.body;
         try {
            await CartDb.removeCart(cartId);
-           res.status(200).json({ status: "OK" })
+           res.status(200).json({ status: "DELETED" })
         } catch (error) {
             next(error)
         }

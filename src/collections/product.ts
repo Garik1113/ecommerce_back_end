@@ -2,6 +2,7 @@ import { Model, Document } from "mongoose";
 import ErrorHandler from "../models/errorHandler";
 const ObjectID = require('mongodb').ObjectID;
 import Product from "../models/product";
+import ConfigController from '../controllers/config';
 import { IProductInput } from "../interfaces/product";
 import { replaceQuotes } from '../helpers/objectId';
 
@@ -16,7 +17,7 @@ class ProductDb {
             throw new ErrorHandler(401, error.message)
         }
     }
-    async getProductById (_id: String):Promise<Document> {
+    async getProductById (_id: string):Promise<Document> {
         try {
             const document: Document = await this._db.findById(ObjectID(_id));
             return document;  
@@ -48,8 +49,9 @@ class ProductDb {
             throw new ErrorHandler(401, error.message)
         }
     }
-    async getProducts (category_id: String, params: any): Promise<Document[]> {
-        const { date, ids, name, sort, limit, page, perPage=1, discount, price_min, price_max } = params;
+    async getProducts (category_id: String, params: any): Promise<any> {
+        const perPage = await ConfigController.getConfigValue("productsPerPage")
+        const { date, ids, limit, page, discount, price_min, price_max, sort, sort_dir } = params;
         const matchParams: any = {
             $match: {},
         };
@@ -60,51 +62,67 @@ class ProductDb {
         if (category_id) {
             matchParams.$match.categories = ObjectID(category_id) ;
         }
-        if(ids) {
+        if (ids) {
             const matchIds = ids.split(",").map((id: string) => ObjectID(id));
             matchParams.$match._id = {
                 $in: matchIds
             }
         }
-        if(discount) {
+        if (discount) {
             matchParams.$match.discount = {
                 $gt: 0
             }
         }
-        if(price_min && price_min !== "undefined") {
+        if (price_min && price_min !== "undefined") {
             matchParams.$match.price = {
                 $gt: Number(price_min)
             };
         }
-        if(price_max && price_max !== "undefined") {
+        if (price_max && price_max !== "undefined") {
             matchParams.$match.price = {
                 ...matchParams.$match.price,
                 $lt: Number(price_max)
             };
         }
-        if (name) {
-            matchParams.$match = {
-                name: { 
-                    $search: "/" + replaceQuotes(name) + "/"
-                }
+        aggr.push(matchParams);
+        if (sort == "date") {
+            if (sort_dir == "asc") {
+                sortParams.$sort.createdAt = -1;
+            } else {
+                sortParams.$sort.createdAt = 1;
             }
-        }
-        aggr.push(matchParams)
-        if (date == "latest") {
-            sortParams.$sort.createdAt = -1;
-            aggr.push(sortParams)
-        } else if (date == "newest") {
-            sortParams.$sort.createdAt = 1;
-            aggr.push(sortParams)
+            aggr.push(sortParams);
+        } else if (sort == "name") {
+            if (sort_dir == "asc") {
+                sortParams.$sort.name = -1;
+            } else {
+                sortParams.$sort.name = 1;
+            }
+            aggr.push(sortParams);
+        } else if (sort == "price") {
+            if (sort_dir == "asc") {
+                sortParams.$sort.price = -1;
+            } else {
+                sortParams.$sort.price = 1;
+            }
+            aggr.push(sortParams);
         }
         if (page) {
-            aggr.push({$skip: Number(page) * Number(limit)})
+            aggr.push({$skip: Number(page) * Number(perPage)})
         }
-        if(limit) {
-            aggr.push({$limit: Number(limit)})
+        if (perPage) {
+            aggr.push({$limit: Number(perPage)});
         }
-        const items: Document[] = await this._db.aggregate(aggr);
-        return items;
+        const items: any[] = await this._db.aggregate([
+            {
+                $facet: {
+                    products: aggr,
+                }
+            }
+        ]);
+        return {
+            products: items[0].products
+        };
     }
     async getAllProducts (params:any):Promise<Document[]> {
         const { date, ids, name, sort, limit, skip, perPage = 2 } = params;
@@ -137,7 +155,6 @@ class ProductDb {
         if (skip) {
             aggr.push({$skip: Number(skip) * Number(perPage)})
         }
-        console.log(aggr)
         const items: Document[] = await this._db.aggregate(aggr);
         return items;
     }
@@ -146,11 +163,12 @@ class ProductDb {
             const documents: Document[] = await this._db.aggregate([
                 {
                     $match: {
-                        $text: {
+                        name: {
+                            $regex: eval("/" + searchQuery + "/")
                             // $search: {
                             //     $regex: eval("/" + searchQuery + "/")
                             // }
-                            $search: searchQuery
+                            // // $search: searchQuery
                         }
                     }
                 }

@@ -6,12 +6,15 @@ export const convertCartToOrder = (cart: any):IOrderInput => {
         cartId: cart._id,
         shippingAddress: cart.shippingAddress,
         billingAddress: cart.billingAddress,
+        shippingMethod: cart.shippingMethod,
         customer: cart.customerId ? convertDbCustomerToNormal(cart.customerId) : null,
         paymentMethod: cart.paymentMethod,
+        subTotal: cart.subTotal,
         totalPrice: cart.totalPrice,
         totalQty: cart.totalQty,
         items: cart.items,
-        status: "pending"
+        status: "pending",
+        currency: cart.currency
     }
 }
 
@@ -23,10 +26,13 @@ export const convertDbOrderToNormal = (orderObj: any):IOrder => {
         billingAddress: orderObj.billingAddress,
         customer: orderObj.customer,
         paymentMethod: orderObj.paymentMethod,
-        totalPrice: orderObj.totalPrice,
+        shippingMethod: orderObj.shippingMethod,
+        subTotal: orderObj.subTotal,
+        totalPrice: Number(orderObj.totalPrice),
         totalQty: orderObj.totalQty,
         items: orderObj.items,
         status: orderObj.status,
-        createdAt: orderObj.createdAt
+        createdAt: orderObj.createdAt,
+        currency: orderObj.currency
     }
 }

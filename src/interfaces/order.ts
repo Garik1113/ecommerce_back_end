@@ -1,17 +1,21 @@
 import { IAddress } from './address';
-import { ICartItemInput } from './cart';
+import { ICartItemInput, PaymentMethod, ShippingMethod } from './cart';
 import { ICustomer } from './customer';
+import { TCurrency } from './product';
 
 export interface IOrderInput {
     customer: ICustomer | null,
     items: ICartItemInput[],
-    paymentMethod: string,
+    paymentMethod: PaymentMethod,
+    shippingMethod: ShippingMethod,
     shippingAddress: IAddress,
     billingAddress: IAddress,
     totalQty: number,
+    subTotal: number,
     totalPrice: number
     cartId: string,
-    status: string
+    status: string,
+    currency: TCurrency
 }
 
 export interface IOrder extends IOrderInput {

@@ -11,6 +11,7 @@ interface IValue extends IValueInput {
 
 interface IAttributeInput extends Document {
     name: string,
+    type: string,
     values: IValueInput[],
 };
 
@@ -20,7 +21,8 @@ interface IAttribute extends IAttributeInput {
 }
 
 const AttributeSchema:Schema = new Schema({
-    name: {type: String, required: true},
+    name: { type: String, required: true },
+    type: { type: String, required: true },
     values: [
         {
             name: { type: String, required: true }

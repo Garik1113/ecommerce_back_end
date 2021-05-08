@@ -1,5 +1,5 @@
 import { Schema, Document, model } from 'mongoose';
-import { Image } from '../interfaces/product';
+import { Image, TCurrency } from '../interfaces/product';
 
 
 interface IProductInput extends Document {
@@ -14,6 +14,7 @@ interface IProductInput extends Document {
     categories: string[],
     configurableAttributes: [],
     images: Image[],
+    currency: TCurrency
 };
 
 interface IProduct extends IProductInput {
@@ -37,6 +38,11 @@ const ProductSchema: Schema = new Schema({
     price: { type: Number, default: 0 },
     discountedPrice: { type: Number, default: 0 },
     discount: { type: Number, default: 0 },
+    currency: {
+        name: String,
+        code: String,
+        symbol: String
+    },
     averageRating: Number,
     configurableAttributes: [ { type: Map } ],
     images: [

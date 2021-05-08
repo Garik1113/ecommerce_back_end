@@ -1,6 +1,6 @@
-import { Model, Document } from "mongoose"
+import { Model, Document, UpdateQuery } from "mongoose"
 import Cart from "../models/cart"
-import { ICartInput, ICart, ICartItemInput } from "../interfaces/cart";
+import { ICart, ICartInput, ICartItemInput } from "../interfaces/cart";
 
 class CartDb {
     protected _db: Model<any> = Cart;
@@ -18,7 +18,7 @@ class CartDb {
     }
     async getCartByCustomer(customerId: string): Promise<Document | any> {
         if(customerId) {
-            const cart: Document = await Cart.findOne({customerId});
+            const cart: Document = await Cart.findOne({ customerId });
             return cart;  
         }
     }
@@ -27,7 +27,7 @@ class CartDb {
     }
     async getCartById (cartId: string): Promise<Document | any> {
         if (cartId) {
-            const cart: Document = await Cart.findById(cartId).populate("items.product")
+            const cart: Document = await Cart.findById(cartId)
             return cart;
         }
     }
@@ -71,22 +71,16 @@ class CartDb {
             }
         );
     }
-    async updateAttributesOfCartItem (cartId: string, newAttributes: any, itemId: string) {
-        await Cart.findByIdAndUpdate(
-            { _id: cartId }, 
-            {$set: {"items.$[item].attributes": newAttributes}},
-            {
-                arrayFilters: [ {'item.itemId': itemId}],
-                new: true
-            }
-        );
-    }
     async deleteCartItem (cartId: string, itemId: string):Promise<void> {
         await Cart.updateOne({ _id: cartId}, { $pull: { "items": { "_id": itemId } } });
     }
     async removeCart (cartId: string):Promise<void> {
         await Cart.findByIdAndDelete(cartId);
     }
+    async updateCartFixed (cartId: string, cartData: UpdateQuery<ICartInput | ICart | typeof undefined>): Promise<Document> {
+        const cartResult: Document = await Cart.findByIdAndUpdate(cartId, cartData, { new: true })
+        return cartResult;
+    }
 }
 
-export default new CartDb ();
+export default new CartDb();

@@ -78,7 +78,7 @@ class SliderController {
             if (req.files) {
                 if (req.files.image) {
                     const image: any = await req.files.image;
-                    const fileName = await uploadImage('slider', image)
+                    const fileName = await uploadImage('slider', image, 1920, 1080)
                     res.status(200).json({ fileName })
                 }
             } else {

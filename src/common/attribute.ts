@@ -9,6 +9,7 @@ const convertValueObjToDbFormat = (value:any = {}):IValueInput => {
 export const convertAttributeObjectToDbFormat = (attributeObj:any = {}): IAttributeInput => {
     return {
         name: attributeObj.name,
+        type: attributeObj.type,
         values: attributeObj.values?.map(convertValueObjToDbFormat) || []
     }
 }
@@ -24,6 +25,7 @@ export const convertDbAttributeToNormal = (attributeDb:any = {}): IAttribute => 
     return {
         _id: attributeDb._id,
         name: attributeDb.name,
+        type: attributeDb.type,
         values: attributeDb.values?.map(convertDbValueToNormal) || []
     }
 } 

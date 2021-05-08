@@ -18,11 +18,24 @@ class OrderDb {
         return newOrder
     }
     async getOrdersByCustomer(customerId: string):Promise<Document[]> {
-        const document: Document[] = await this._db.find({ "customer._id": new ObjectID(customerId)});
+        const document: Document[] = await this._db.aggregate([
+            {
+                $match: { "customer._id": new ObjectID(customerId)},
+            },
+            {
+                $sort: { createdAt: -1 }
+            }
+        ]);
         return document;
     }
     async getOrders():Promise<Document[]> {
-        const document: Document[] = await this._db.find({})
+        const document: Document[] = await this._db.aggregate([
+            {
+                $sort: {
+                    createdAt: -1
+                }
+            }
+        ])
         return document;
     }
     async getOrder(orderId: string):Promise<Document> {

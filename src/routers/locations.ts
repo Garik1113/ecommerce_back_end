@@ -19,12 +19,6 @@ class Location {
                 cities: cities.country.cities
             })
         });
-        // this._router.get('/states', (req: Request, res: Response, next: NextFunction) => {
-        //     res.json({ states: states.country.states})
-        // });
-        // this._router.get('/cities', (req: Request, res: Response, next: NextFunction) => {
-        //     res.json({ cities: cities.country.cities })
-        // });
     }
 }
 

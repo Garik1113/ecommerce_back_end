@@ -19,6 +19,7 @@ class AttributeRouter {
         this._router.delete('/admin/attributes/:attribute_id', verifyToken,  this._controller.deleteAttribute);
         this._router.get('/admin/attributes/:attribute_id', verifyToken,  this._controller.getAttribute);
         this._router.get('/admin/attributes', verifyToken,  this._controller.getAttributes);
+        this._router.get('/',  this._controller.getAttributes);
     }
 }
 

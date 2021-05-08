@@ -11,7 +11,7 @@ import { ICategoryInput } from '../interfaces/category'
     return category;
 }
 
-export const convertDbCategoryToNormal = (categoryDb:any):ICategory => {
+export const convertDbCategoryToNormal = (categoryDb:any={}):ICategory => {
     const category:ICategory = {
         _id: categoryDb._id,
         name: categoryDb.name,

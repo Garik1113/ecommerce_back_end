@@ -1,16 +1,6 @@
 import { IAddress } from "../interfaces/address";
 import { ICartInput, ICart, ICartItemInput, TCartItemAttribute } from "../interfaces/cart";
 
-export const getTotalPriceOfItems = (items: any[] = []): number => {
-    const value:number = items.reduce((initialState: number, current: ICartItemInput) => {
-        const price = current.product.discountedPrice || current.product.price;
-        initialState += (price * current.quantity);
-        return initialState;
-    }, 0);
-
-    return value;
-}
-
 export const getTotalQtyOfItems = (items: any[] = []) => {
     const qty:number = items.reduce((initialState: number, current: ICartItemInput) => {
             initialState += current.quantity
@@ -24,12 +14,15 @@ export const convertDbCartToNormal = (cartObj: any = {}): ICart => {
         _id: cartObj._id,
         items: cartObj.items || [],
         paymentMethod: cartObj.paymentMethod,
+        shippingMethod: cartObj.shippingMethod,
         shippingAddress: cartObj.shippingAddress,
         billingAddress: cartObj.billingAddress,
         customerId: cartObj.customerId,
-        totalPrice: getTotalPriceOfItems(cartObj.items),
-        totalQty: getTotalQtyOfItems(cartObj.items),
-        stripePaymentMethodId: cartObj.stripePaymentMethodId
+        totalPrice: cartObj.totalPrice,
+        subTotal: cartObj.subTotal,
+        totalQty: cartObj.totalQty,
+        stripePaymentMethodId: cartObj.stripePaymentMethodId,
+        currency: cartObj.currency
     };
 
     return cart;
@@ -38,42 +31,19 @@ export const convertDbCartToNormal = (cartObj: any = {}): ICart => {
 export const createEmptycart = (): ICartInput => {
     const cart: ICartInput = {
         items:[],
-        paymentMethod: "",
-        shippingAddress: {
-            firstName: "",
-            lastName: "",
-            email: "",
-            country: "",
-            city: "",
-            state: "",
-            street: "",
-            firstAddress: "",
-            secondAddress: "",
-            phone: "",
-            zip: "",
-            company: "",
-            isBillingAddress: false,
-            isShippingAddress: false
-        },
-        billingAddress:  {
-            firstName: "",
-            lastName: "",
-            email: "",
-            country: "",
-            city: "",
-            state: "",
-            street: "",
-            firstAddress: "",
-            secondAddress: "",
-            phone: "",
-            zip: "",
-            company: "",
-            isBillingAddress: false,
-            isShippingAddress: false
-        },
+        paymentMethod: null,
+        shippingMethod:null,
+        shippingAddress: null,
+        billingAddress: null,
+        subTotal: 0,
         totalPrice: 0,
         totalQty: 0,
-        customerId: null
+        customerId: null,
+        currency: {
+            name: "AMD",
+            code: "amd",
+            symbol: "$"
+        }
     };
 
     return cart;
@@ -88,8 +58,8 @@ export const convertInputAddressToNormal = (address: any): IAddress => {
         state: address.state || "",
         city: address.city || "",
         street: address.street || "",
-        firstAddress: address.firstAddress || "",
-        secondAddress: address.secondAddress || "",
+        address: address.address || "",
+        additionalInformation: address.additionalInformation || "",
         phone: address.phone || "",
         zip: address.zip || "",
         company: address.company || "",

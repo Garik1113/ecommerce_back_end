@@ -11,6 +11,12 @@ export type ConfigurableAttribute = {
     selectedValue: IValue
 }
 
+export type TCurrency = {
+    name: string,
+    code: string,
+    symbol: string
+}
+
 export interface IProductInput {
     name: string,
     categories: string[],
@@ -21,6 +27,7 @@ export interface IProductInput {
     price: number,
     discount: number,
     discountedPrice: number,
+    currency: TCurrency,
     averageRating: number,
     configurableAttributes: ConfigurableAttribute[],
     images: Image[]

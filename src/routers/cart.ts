@@ -23,6 +23,7 @@ class CartRouter {
         this.router.put('/add-shipping-address', this._controller.addShippingAddress)
         this.router.put('/add-billing-address', this._controller.addBillingAddress)
         this.router.put('/add-payment-method', this._controller.addPaymentMethod)
+        this.router.put('/add-shipping-method', this._controller.addShippingMethod)
         this.router.put('/add-stripe-id', this._controller.addStripePaymentMethodId)
         this.router.delete('/remove', this._controller.removeCart)
     }

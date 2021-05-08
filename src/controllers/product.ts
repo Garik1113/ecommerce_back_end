@@ -3,15 +3,20 @@ import { convertDbProductToNormal, convertProductObjectToDbFormat, getFiltersFro
 import ErrorHandler from "../models/errorHandler";
 import { IProductInput, IProduct } from "../interfaces/product";
 import ProductDb from '../collections/product';
-import CategoryDb from '../collections/category';
+import ConfigController from './config';
 const ObjectID = require('mongodb').ObjectID;
 import Category from "../models/category";
 import { NextFunction, Request, Response } from "express";
 import { asyncForEach } from '../helpers/asyncForEach';
-import { convertDbCategoryToNormal } from '../common/category';
 import { uploadImage } from "../helpers/uploadImage";
+import { convertDbCategoryToNormal } from "../common/category";
+import { ICategory } from "../interfaces/category";
+import CategoryDb from '../collections/category'
+import AttributeDb from "../collections/attribute";
+import { IAttribute } from "../interfaces/attribute";
+import { convertDbAttributeToNormal } from "../common/attribute";
 
-
+const alphabet: string[] = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"]
 class ProductController {
     defaulMethod() {
         return {
@@ -19,10 +24,28 @@ class ProductController {
         };
     };
     public async createProduct(req: Request, res: Response, next: NextFunction):Promise<IProductInput | any> {
+        const baseCurrency = await ConfigController.getConfigValue("baseCurrency")
         try {
             const productObject: any = req.body;
             const readyForDbProduct: IProductInput = convertProductObjectToDbFormat(productObject);
-            const productDb: Document = await ProductDb.createProduct(readyForDbProduct);
+            // for (let index = 0; index < alphabet.length; index++) {
+            //     const productDb: Document = await ProductDb.createProduct({
+            //         ...readyForDbProduct, name: alphabet[index]+readyForDbProduct.name, currency: baseCurrency,
+            //         price: readyForDbProduct.price * (index + 1)
+            //     });
+            //     const product: IProduct = convertDbProductToNormal(productDb);
+            //     const { categories } = product;
+            //     await asyncForEach(categories, async (id:string) => {
+            //         await Category.updateOne({_id: id}, {
+            //             $push: {
+            //                 products: ObjectID(product._id)
+            //             }
+            //         })
+            //     })
+            // }
+            // res.send({ok: true})
+            // return
+            const productDb: Document = await ProductDb.createProduct({...readyForDbProduct, currency: baseCurrency});
             const product: IProduct = convertDbProductToNormal(productDb);
             const { categories } = product;
             await asyncForEach(categories, async (id:string) => {
@@ -60,6 +83,17 @@ class ProductController {
     public async deleteProduct(req: Request, res: Response, next: NextFunction):Promise<void> {
         const { _id } = req.params;
         try {
+            const productResult = await ProductDb.getProductById(ObjectID(_id));
+            const product = convertDbProductToNormal(productResult);
+            await asyncForEach(product.categories, async(cat: string) => {
+                const categoryResult = await CategoryDb.getCategoryById(cat);
+                if (categoryResult) {
+                    const category = convertDbCategoryToNormal(categoryResult);
+                    const { products } = category;
+                    const filteredProducts = products.filter(p => String(p) != String(_id));
+                    await CategoryDb.updateCategory(cat, {...category, products: filteredProducts})
+                }
+            });
             await ProductDb.deleteProduct(_id);
             res.status(200).json({ status: "Deleted" });
         } catch (error) {
@@ -68,17 +102,21 @@ class ProductController {
     }
     public async getProducts(req: Request, res: Response, next: NextFunction):Promise<IProductInput[] | any> {
         const { category_id } = req.params;
+        let category: ICategory | null = null;
+        if (category_id) {
+            const categoryDb: Document = await CategoryDb.getCategoryById(category_id);
+            category = convertDbCategoryToNormal(categoryDb);
+        }
         try {
-            const documents: Document[] = await ProductDb.getProducts(category_id, req.query);
-            if (category_id) {
-                const categoryResult:Document = await CategoryDb.getCategoryById(category_id);
-                const category = convertDbCategoryToNormal(categoryResult);
-                const products: IProduct[] = documents.map(convertDbProductToNormal);
-                res.status(200).json({ products, totalProducts:  products.length});
-            } else {
-                const products: IProduct[] = documents.map(convertDbProductToNormal);
-                res.status(200).json({ products });
-            }
+            const document: any = await ProductDb.getProducts(category_id, req.query);
+            const products: IProduct[] = document.products.map(convertDbProductToNormal);
+            const documents: Document[] = await AttributeDb.getAttributes();
+            const attributes:IAttribute[] = documents.map(convertDbAttributeToNormal)
+            res.status(200).json({ 
+                products,
+                attributes,
+                totalProducts: category?.products.length || products.length
+            });
         } catch (error) {
             next(error)
         }
@@ -107,7 +145,7 @@ class ProductController {
             if (req.files) {
                 if(req.files.image) {
                     const image: any = await req.files.image;
-                    const fileName = await uploadImage('product', image)
+                    const fileName = await uploadImage('product', image, 800, 600)
                     res.status(200).json({ fileName })
                 }
             } else {

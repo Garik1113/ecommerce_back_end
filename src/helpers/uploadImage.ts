@@ -2,8 +2,9 @@ import { UploadedFile } from "express-fileupload";
 import fs from 'fs';
 import path from 'path';
 import ErrorHandler from "../models/errorHandler";
+const sharp = require('sharp');
 
-export const uploadImage = async(folder: string,  file: UploadedFile): Promise<string> => {
+export const uploadImage = async(folder: string,  file: UploadedFile, width: number, height: number): Promise<string> => {
     const { mv, name } = await file;
     const randomNumber: number = Math.floor(Math.random() * 100 + Date.now());
     const fileName = randomNumber + name;
@@ -12,6 +13,7 @@ export const uploadImage = async(folder: string,  file: UploadedFile): Promise<s
     if (!folderExists) {
         fs.mkdirSync(imageFolder);
     }
+    
     await mv(`${imageFolder}/${fileName}`, (err :any) => {
         if(err) {
             fs.unlink(`${imageFolder}/${fileName}`, (err: any) => {
@@ -21,6 +23,13 @@ export const uploadImage = async(folder: string,  file: UploadedFile): Promise<s
                 }
             })
         }
+    });
+    await sharp(file.data)
+        .resize(width, height)
+        .toFile(`${imageFolder}/${fileName}`, (err:any, info: any) => {
+            if(err) {
+                throw new ErrorHandler(203, "Error while uploading image")
+            }
     });
     return fileName
 }

@@ -2,32 +2,16 @@ import {Image, IProductInput, IProduct } from '../interfaces/product';
 
 
 const makeImageReadyForDb = (images: string[] = []):Image[] => {
-    return images.map((image) => {
+    return images.map((image: any) => {
         return {
-            thumbnail_image: image,
-            small_image: image,
-            main_image: image
+            thumbnail_image:  typeof image == "object" ? image.thumbnail_image : image,
+            small_image: typeof image == "object" ? image.small_image : image,
+            main_image: typeof image == "object" ? image.main_image : image,
         }
     })
 }
 
-const makeAttributeReadyForDb = (attributes: any[] = []) => {
-    return attributes.map((attr) => {
-        return {
-            id: attr.id,
-            label: attr.label,
-            values: attr.values.map((val: any) => {
-                return {
-                    id: val.id,
-                    label: val.label,
-                    images: makeImageReadyForDb(val.images)
-                }
-            })
-        }
-    })
-}
-
- export const convertProductObjectToDbFormat = (productObj: any):IProductInput => {
+export const convertProductObjectToDbFormat = (productObj: any):IProductInput => {
     const product: IProductInput = {
         name: productObj.name || "",
         pageTitle: productObj.pageTitle || "",
@@ -40,12 +24,13 @@ const makeAttributeReadyForDb = (attributes: any[] = []) => {
         categories: productObj.categories || [],
         images: makeImageReadyForDb(productObj.images) || [],
         quantity: productObj.quantity || 0,
-        configurableAttributes: productObj.configurableAttributes
+        configurableAttributes: productObj.configurableAttributes,
+        currency: productObj.currency
     }
     return product;
 }
 
-export const convertDbProductToNormal = (productDb: any):IProduct => {
+export const convertDbProductToNormal = (productDb: any={}):IProduct => {
     const product: IProduct = {
         _id: productDb._id,
         name: productDb.name || "",
@@ -59,13 +44,14 @@ export const convertDbProductToNormal = (productDb: any):IProduct => {
         categories: productDb.categories || [],
         images: productDb.images || [],
         quantity: productDb.quantity || 0,
-        configurableAttributes: productDb.configurableAttributes
+        configurableAttributes: productDb.configurableAttributes,
+        currency: productDb.currency
     }
     return product;
 }
 
 export const getTotalPriceOfProduct = (product: IProduct, quantity: number): number => {
-    return product.price * quantity
+    return product.discountedPrice ? product.discountedPrice * quantity : product.price * quantity
 }
 
 export const getFiltersFromParams = (filterParam:any) => {

@@ -33,6 +33,7 @@ export const convertDbCustomerToNormal = (dbCustomer: any):ICustomer => {
 }
 export const convertCustomerAddressToDbFormat = (addressObj: any):IAddress => {
     const customer: IAddress = {
+        _id: addressObj._id,
         firstName: addressObj.firstName,
         lastName: addressObj.lastName,
         email: addressObj.email,
@@ -42,8 +43,8 @@ export const convertCustomerAddressToDbFormat = (addressObj: any):IAddress => {
         street: addressObj.street,
         phone: addressObj.phone,
         zip: addressObj.zip,
-        firstAddress: addressObj.firstAddress,
-        secondAddress: addressObj.secondAddress,
+        address: addressObj.address,
+        additionalInformation: addressObj.additionalInformation,
         company: addressObj.company,
         isBillingAddress: addressObj.isBillingAddress,
         isShippingAddress: addressObj.isShippingAddress
