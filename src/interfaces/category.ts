@@ -1,6 +1,7 @@
 export interface ICategoryInput {
     name: string,
     include_in_menu: boolean,
+    image: string,
     products: string[]
 }
 

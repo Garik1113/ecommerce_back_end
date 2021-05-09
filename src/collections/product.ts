@@ -51,8 +51,8 @@ class ProductDb {
     }
     async getProducts (category_id: String, params: any): Promise<any> {
         const perPage = await ConfigController.getConfigValue("productsPerPage")
-        const { date, ids, limit, page, discount, price_min, price_max, sort, sort_dir } = params;
-        const matchParams: any = {
+        const { date, ids, limit, page, discount, price_min, price_max, sort, sort_dir, size, color } = params;
+        let matchParams: any = {
             $match: {},
         };
         const sortParams: any = {
@@ -84,6 +84,37 @@ class ProductDb {
                 $lt: Number(price_max)
             };
         }
+        
+        if (size && color) {
+            matchParams.$match = {
+                ...matchParams.$match,
+                $and: [
+                    {
+                       configurableAttributes: {
+                            $elemMatch: {
+                                "selectedValue._id": String(size)
+                            } 
+                        }
+                    },
+                    {
+                        configurableAttributes: {
+                            $elemMatch: {
+                                "selectedValue._id": String(color)
+                            } 
+                        }
+                    },  
+                ]
+            }
+        } else if (size || color) {
+            matchParams.$match = {
+                ...matchParams.$match,
+                configurableAttributes: {
+                    $elemMatch: {
+                        "selectedValue._id": String(size || color)
+                    } 
+                }
+            }
+        }
         aggr.push(matchParams);
         if (sort == "date") {
             if (sort_dir == "asc") {
@@ -113,15 +144,19 @@ class ProductDb {
         if (perPage) {
             aggr.push({$limit: Number(perPage)});
         }
-        const items: any[] = await this._db.aggregate([
+        const items: any[] | any = await this._db.aggregate([
             {
                 $facet: {
                     products: aggr,
+                    totalsCount: [
+                        {$count: "totals"}
+                    ]
                 }
             }
-        ]);
+        ]).catch(e => console.log("Error", e))
         return {
-            products: items[0].products
+            products: items[0].products,
+            totals: items[0].totalsCount[0].totals
         };
     }
     async getAllProducts (params:any):Promise<Document[]> {

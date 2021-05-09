@@ -103,7 +103,7 @@ class CartController {
             } else {
                 let cartObj;
                 if (customerId) {
-                    cartObj = await CartDb.getCartByCustomer(replaceQuotes(customerId))
+                    cartObj = await CartDb.getCartByCustomer(replaceQuotes(customerId));
                 } else {
                     cartObj = await CartDb.getCartById(cartId);
                 }
@@ -181,6 +181,7 @@ class CartController {
                 delete cart._id;
                 const cartBeforeUpdate = await prepareCartBeforeSending(cart);
                 const fixedCart = await collectTotals(cartBeforeUpdate);
+                delete fixedCart._id
                 const newCartResult = await CartDb.updateCartFixed(cartId, fixedCart);
                 newCart = await prepareCartBeforeSending(newCartResult);
             }

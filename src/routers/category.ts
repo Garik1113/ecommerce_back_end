@@ -21,7 +21,9 @@ class CategoryRouter {
         this._router.get('/admin/', verifyToken, this._controller.getAllCategories);
         this._router.delete('/admin/:_id', verifyToken, this._controller.deleteCategory);
         this._router.get('/admin/:_id', verifyToken, this._controller.getCategoryById);
-        this._router.put('/admin/:_id', verifyToken, this._controller.updateCategory)
+        this._router.put('/admin/:_id', verifyToken, this._controller.updateCategory);
+        this._router.post('/admin/upload_image', verifyToken, this._controller.uploadImage);
+        
 
         //Customer routes
         this._router.get('/', this._controller.getAllCategories);

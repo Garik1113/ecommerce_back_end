@@ -3,7 +3,8 @@ import CategoryDb from '../collections/category';
 import { convertCategoryObjectToDbFormat, convertDbCategoryToNormal } from '../common/category'
 import { ICategory, ICategoryInput } from "../interfaces/category";
 import { NextFunction, Request, Response } from "express";
-import { ParsedUrlQuery } from 'querystring';
+import { uploadImage as uploadCategoryImage } from "../helpers/uploadImage";
+import ErrorHandler from "../models/errorHandler";
 
 class CategoryController {
     defaulMethod() {
@@ -59,6 +60,21 @@ class CategoryController {
             res.status(200).json({status: 'updated'})
         } catch (error) {
             next(error);
+        }
+    }
+    public async uploadImage(req: Request, res: Response, next: NextFunction):Promise<void> {
+        try {
+            if (req.files) {
+                if(req.files.image) {
+                    const image: any = await req.files.image;
+                    const fileName = await uploadCategoryImage('category', image, 1400, 500)
+                    res.status(200).json({ fileName })
+                }
+            } else {
+                throw new ErrorHandler(309, "Image not found");
+            }
+        } catch (error) {
+            next(error)
         }
     }
 }

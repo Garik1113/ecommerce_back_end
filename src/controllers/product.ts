@@ -31,7 +31,8 @@ class ProductController {
             // for (let index = 0; index < alphabet.length; index++) {
             //     const productDb: Document = await ProductDb.createProduct({
             //         ...readyForDbProduct, name: alphabet[index]+readyForDbProduct.name, currency: baseCurrency,
-            //         price: readyForDbProduct.price * (index + 1)
+            //         price: readyForDbProduct.price * (index + 1),
+            //         discountedPrice: 
             //     });
             //     const product: IProduct = convertDbProductToNormal(productDb);
             //     const { categories } = product;
@@ -115,7 +116,8 @@ class ProductController {
             res.status(200).json({ 
                 products,
                 attributes,
-                totalProducts: category?.products.length || products.length
+                totalProducts: category?.products.length || products.length,
+                totals: req.body.userId ? document.totals : null
             });
         } catch (error) {
             next(error)
