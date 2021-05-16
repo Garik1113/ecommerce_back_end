@@ -3,6 +3,11 @@ import { ICartItemInput, PaymentMethod, ShippingMethod } from './cart';
 import { ICustomer } from './customer';
 import { TCurrency } from './product';
 
+export type TStatus = {
+    name: string,
+    value: string
+}
+
 export interface IOrderInput {
     customer: ICustomer | null,
     items: ICartItemInput[],
@@ -14,7 +19,7 @@ export interface IOrderInput {
     subTotal: number,
     totalPrice: number
     cartId: string,
-    status: string,
+    status: TStatus,
     currency: TCurrency
 }
 

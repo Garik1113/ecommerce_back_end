@@ -5,7 +5,8 @@ interface IReviewInput extends Document {
     customerId: string,
     productId: string,
     rating: number,
-    comment: string
+    comment: string,
+    status: string
 };
 
 interface IReview extends IReviewInput {
@@ -24,6 +25,7 @@ const ReviewSchem:Schema = new Schema({
         required: true
     },
     comment: { type: String, default: ""},
+    status: { type: String, default: "disabled"},
     rating: { type: Number, default: 5, max: 10}
 }, {timestamps: true});
 

@@ -1,6 +1,6 @@
 import { Document} from "mongoose";
 import ErrorHandler from "../models/errorHandler";
-import { comparePasswords, convertCustomerAddressToDbFormat } from "../common/customer";
+import { comparePasswords, convertCustomerAddressToDbFormat, hashPassword } from "../common/customer";
 import { ICustomer, ICustomerInput } from "../interfaces/customer";
 import CustomerDb from '../collections/customer';
 import { Result, ValidationError, validationResult } from 'express-validator';
@@ -11,6 +11,8 @@ import CartDb from '../collections/cart';
 import { createEmptycart } from '../common/cart';
 import { replaceQuotes } from '../helpers/objectId';
 import { IAddress } from "../interfaces/address";
+import { verifyEmail } from '../aws/aws';
+import Productsubscriptions from '../collections/productsubscriptions';
 
 class CustomerController {
     defaulMethod() {
@@ -30,10 +32,14 @@ class CustomerController {
             if (existCustomer) {
                 throw new ErrorHandler(409, "Customer with that email is already exist");
             } else {
+                const { productSubscriptions } = req.body;
                 const cart: Document = await CartDb.creatCart({...createEmptycart()});
                 const cartId: string = cart._id;
                 const customerDoc: Document = await CustomerDb.createCustomer({...customerDb, cartId });
                 const customer: ICustomer =  convertDbCustomerToNormal(customerDoc);
+                if (productSubscriptions) {
+                    await verifyEmail(customer.email)
+                }
                 await CartDb.updateCart(cartId, { customerId: customer._id })
                 res.status(200).json({ customer });
             }
@@ -48,12 +54,11 @@ class CustomerController {
             if (!errors.isEmpty()) {
                 throw new ErrorHandler(401, "Validation Error", errors.array());
             }
-            const customerDb: Document = await CustomerDb.findByEmail(email);
+            const customerDb: any = await CustomerDb.findByEmail(email);
             if (!customerDb) {
                 throw new ErrorHandler(401, "Customer with that email is not exists");
             }
-            const customer: ICustomer = convertDbCustomerToNormal(customerDb);
-            if (comparePasswords(password, customer.password || "")) {
+            if (comparePasswords(password, customerDb.password || "")) {
                 const token: string = generateTokenWithCustomerId(customerDb._id);
                 await CustomerDb.update(customerDb._id, { loggedIn: true });
                 res.status(200).json({ token });
@@ -86,10 +91,23 @@ class CustomerController {
     public async updateCustomer (req: Request, res: Response, next: NextFunction):Promise<void> {
         const { customerId, data } = req.body;
         try {
-            const result = await CustomerDb.update(replaceQuotes(customerId), data);
-            const customer: ICustomer = convertDbCustomerToNormal(result)
-            res.status(200).json({customer});
+            if (data.hasChangedPassword) {
+                const dbCustomer = await CustomerDb.getCustomerById(customerId);
+                const { currentPassword, newPassword } = data;
+                if (comparePasswords(currentPassword, dbCustomer.password)) {
+                    const newCustomer = await CustomerDb.update(replaceQuotes(customerId), {...data, password: hashPassword(newPassword)});
+                    const customer: ICustomer = convertDbCustomerToNormal(newCustomer)
+                    res.status(200).json({ customer });
+                } else {
+                    throw new ErrorHandler(203, "Passwords are not the same")
+                }
+            } else {
+                const result = await CustomerDb.update(replaceQuotes(customerId), data);
+                const customer: ICustomer = convertDbCustomerToNormal(result)
+                res.status(200).json({customer});
+            }
         } catch (error) {
+            console.log(error)
             next(error);
         }
     }
@@ -139,7 +157,8 @@ class CustomerController {
     public async deleteCustomer (req: Request, res: Response, next: NextFunction):Promise<void> {
         const { customerId } = req.params
         try {
-            await CustomerDb.deleteCustomerById(replaceQuotes(customerId))
+            await CustomerDb.deleteCustomerById(replaceQuotes(customerId));
+            await Productsubscriptions.deleteProductSubscriptionByCustomerId(replaceQuotes(customerId))
             res.status(200).json({ status: "DELETED" });
         } catch (error) {
             next(error);

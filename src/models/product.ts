@@ -43,7 +43,7 @@ const ProductSchema: Schema = new Schema({
         code: String,
         symbol: String
     },
-    averageRating: Number,
+    averageRating: { type: Number, default: 3 },
     configurableAttributes: [ { type: Map } ],
     images: [
         {

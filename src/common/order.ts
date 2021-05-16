@@ -13,7 +13,10 @@ export const convertCartToOrder = (cart: any):IOrderInput => {
         totalPrice: cart.totalPrice,
         totalQty: cart.totalQty,
         items: cart.items,
-        status: "pending",
+        status: {
+            value: 'new',
+            name: "New"
+        },
         currency: cart.currency
     }
 }

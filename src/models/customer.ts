@@ -8,7 +8,8 @@ interface ICustomerInput extends Document {
     password: string,
     cartId: string,
     loggedIn: boolean,
-    addresses: IAddress[]
+    addresses: IAddress[],
+    productSubscriptions: boolean
 }
 
 interface ICustomer extends ICustomerInput {
@@ -23,6 +24,7 @@ const CustomerSchema: Schema = new Schema({
     password: { type: String, required: true },
     cartId: { type: Schema.Types.ObjectId, ref: "Cart" },
     loggedIn: { type: Boolean, required: true, default: false },
+    productSubscriptions: { type: Boolean, default: false },
     addresses: [
         {
             firstName: String,

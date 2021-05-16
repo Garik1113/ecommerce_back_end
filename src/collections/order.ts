@@ -42,6 +42,10 @@ class OrderDb {
         const document: Document = await this._db.findById(orderId)
         return document;
     }
+    async updateOrder(orderId: string, orderData: any): Promise<Document> {
+        const newOrder: Document = await this._db.findByIdAndUpdate(orderId, orderData, { new: true });
+        return newOrder;
+    }
     async deleteOrder(orderId: string):Promise<void> {
         await this.db.findByIdAndDelete(orderId)
     }

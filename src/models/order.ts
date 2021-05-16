@@ -2,6 +2,7 @@ import { Schema, Document, model } from 'mongoose';
 import { IAddress } from '../interfaces/address';
 import { ICartItemInput, ICartItem, PaymentMethod, ShippingMethod } from '../interfaces/cart';
 import { ICustomer } from '../interfaces/customer';
+import { TStatus } from '../interfaces/order';
 import { TCurrency } from '../interfaces/product';
 
 interface IOrderInput extends Document {
@@ -14,7 +15,7 @@ interface IOrderInput extends Document {
     subTotal: number,
     totalPrice: number,
     currency: TCurrency,
-    status: string,
+    status: TStatus,
     cartId: string,
     customer: ICustomer
 };
@@ -41,7 +42,7 @@ const OrderSchem: Schema = new Schema({
     subTotal: { type: Schema.Types.Decimal128 },
     totalPrice: { type: Schema.Types.Decimal128 },
     currency: { type: {} },
-    status: { type: String, default: "pending" },
+    status: { type: {} },
     cartId: { 
         type: Schema.Types.ObjectId,
         ref: "Cart" 

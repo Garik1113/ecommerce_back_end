@@ -4,7 +4,8 @@ export interface IReviewInput {
     customerId: string,
     productId: string,
     rating: number,
-    comment: string
+    comment: string,
+    status: string
 };
 
 export interface IReview extends IReviewInput {

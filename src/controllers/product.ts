@@ -15,6 +15,7 @@ import CategoryDb from '../collections/category'
 import AttributeDb from "../collections/attribute";
 import { IAttribute } from "../interfaces/attribute";
 import { convertDbAttributeToNormal } from "../common/attribute";
+import productsubscriptions from '../collections/productsubscriptions';
 
 const alphabet: string[] = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"]
 class ProductController {
@@ -24,7 +25,11 @@ class ProductController {
         };
     };
     public async createProduct(req: Request, res: Response, next: NextFunction):Promise<IProductInput | any> {
-        const baseCurrency = await ConfigController.getConfigValue("baseCurrency")
+        const baseCurrency = await ConfigController.getConfigValue("baseCurrency") || {
+            name: "AMD",
+            code: "amd",
+            symbol: "$"
+        }
         try {
             const productObject: any = req.body;
             const readyForDbProduct: IProductInput = convertProductObjectToDbFormat(productObject);
@@ -95,6 +100,7 @@ class ProductController {
                     await CategoryDb.updateCategory(cat, {...category, products: filteredProducts})
                 }
             });
+            await productsubscriptions.deleteProductSubscriptionByProductId(_id)
             await ProductDb.deleteProduct(_id);
             res.status(200).json({ status: "Deleted" });
         } catch (error) {

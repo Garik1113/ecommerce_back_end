@@ -1,11 +1,12 @@
 import { NextFunction, Request, Response } from "express";
-import { UploadedFile } from "express-fileupload";
 import { Document } from "mongoose";
-import { uploadFile } from "../aws/aws";
 import ReviewDb from '../collections/review';
 import { convertReviewObjectToDb, convertDbReviewToNormal } from "../common/review";
 import ErrorHandler from "../models/errorHandler";
 import { IReview, IReviewInput } from "../interfaces/review";
+import ProductDb from '../collections/product';
+import { convertDbProductToNormal, convertProductObjectToDbFormat } from '../common/product';
+import { IProduct } from '../interfaces/product';
 
 class ReviewController {
     protected _db: typeof ReviewDb = ReviewDb;
@@ -16,7 +17,21 @@ class ReviewController {
     public createReview = async(req: Request, res: Response, next: NextFunction):Promise<void>=> {
         try {
             const review: IReviewInput = convertReviewObjectToDb(req.body);
+            const productDb = await ProductDb.getProductById(review.productId);
+            if (!productDb) {
+                throw new ErrorHandler(203, "Product not found")
+            }
+            const product:IProduct = convertDbProductToNormal(productDb);
             const result: Document = await this.db.createReview(review);
+            const productReviews: Document[] = await this.db.getReviews(product._id, false);
+            const reviews: IReview[] = productReviews.map(convertDbReviewToNormal);
+            let rating = 0;
+            for (let index = 0; index < reviews.length; index++) {
+                const element = reviews[index];
+                rating += Number(element.rating)
+            }
+            const averageRating = Math.ceil(Number(rating / reviews.length));
+            await ProductDb.updateProduct(product._id, { ...convertProductObjectToDbFormat(product), averageRating });
             const document: Document = await this.db.getReviewById(result._id);
             const reviewResult: IReviewInput = convertDbReviewToNormal(document);
             res.status(200).json({review: reviewResult});
@@ -44,6 +59,16 @@ class ReviewController {
             next(error);
         }    
     }
+    public getReviewsbyProductId = async(req: Request, res: Response, next: NextFunction):Promise<void> => {
+        const { product_id } = req.query;
+        try {
+            const documents: Document[] = await this.db.getReviewsByProductId(product_id);
+            const reviews: IReview[] = documents.map(convertDbReviewToNormal);
+            res.status(200).json({ reviews });
+        } catch (error) {
+            next(error);
+        }    
+    }
     public deleteReview = async(req: Request, res: Response, next: NextFunction): Promise<void>=> {
         const { _id } = req.params;
         try {
@@ -55,26 +80,13 @@ class ReviewController {
     }
     public updateReview =  async(req: Request, res: Response, next: NextFunction): Promise<void>=> {
         const { _id } = req.params;
+        const { status } = req.body;
         try {
-            await this.db.updateReview(_id, req.body);
+            await this.db.updateReview(_id, status);
             res.status(200).json({ status: "updated" });
         } catch (error) {
             next(error);
         }    
-    }
-    public async uploadImage(req: Request, res: Response, next: NextFunction):Promise<void> {
-        try {
-            if (req.files) {
-                if (req.files.image) {
-                    const fileName: string = await uploadFile('reviews', req.files.image as UploadedFile);
-                    res.status(200).json({ fileName })
-                }
-            } else {
-                throw new ErrorHandler(309, "Image not found")
-            }
-        } catch (error) {
-            next(error)
-        }
     }
 }
 

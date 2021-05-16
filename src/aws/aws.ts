@@ -1,42 +1,53 @@
-import Aws from 'aws-sdk';
-import config from 'config';
-import { UploadedFile } from 'express-fileupload';
-import ErrorHandler from '../models/errorHandler';
-import { createWriteStream } from 'fs'
-import path from 'path'
-Aws.config.update({
-    accessKeyId: config.get("ACCESS_KEY_ID"),
-    secretAccessKey: config.get("SECRET_ACCES_KEY"),
-    region: config.get("REGION")
-});
+const Aws = require('aws-sdk');
+const config = require('config');
 
-const s3Bucket = new Aws.S3({
-    params: {
-        Bucket: config.get("BUCKET_NAME")
-    }
-})
+type Params = {
+    to: string,
+    content: string,
+    subject: string
+}
 
-export const uploadFile = async (folder: string,  file: UploadedFile): Promise<string> => {
-    const { mv } = await file;
-    await mv(path.resolve("./src/media/product"), (err: any) => {
-        console.log("EEEEEEEEEEEEEEEEEEEEEEEE", err)
-    });
-    return ""
-    const randomNumber: number = Math.floor(Math.random() * 100 + Date.now());
-    const fileName = randomNumber + file.name ; 
-    const data: any = {
-        Key: `${folder}/${fileName}`,
-        Body: file.data,
-        ContentEncoding: 'base64',
-        ContentType: 'image/jpeg',
-        ACL: 'public-read'
-    }
+export const sendEmail = async (sesParams: Params) => {
+    const { to, content, subject } = sesParams;
+    const ses = new Aws.SES({
+        region: config.get("aws").REGION,
+        credentials: {
+            accessKeyId : config.get("aws").ACCESS_KEY_ID,
+            secretAccessKey: config.get("aws").SECRET_ACCES_KEY
+        } 
+    })
+    const params = {
+        Destination: {
+            ToAddresses: [
+                to
+            ]
+        },
+        Message: {
+            Body: {
+                Text: {
+                    Charset: "UTF-8", 
+                    Data: content
+                }
+            },
+            Subject: {
+                Charset: "UTF-8", 
+                Data: subject
+            }
+        },
+        Source: "Gariktsaturyan97@gmail.com"
+    };
+    const result = await ses.sendEmail(params).promise();
+    console.log("result", result)
+}
 
-    // s3Bucket.putObject(data, err => {
-    //     if(err) {
-    //         throw new ErrorHandler(403, "Somenting went wrong when uploading file")
-    //     }
-        
-    // })
-    return fileName;
-};
+
+export const verifyEmail = async(email: string) => {
+    await new Aws.SES({
+        apiVersion: '2010-12-01', 
+        region: config.get("aws").REGION,
+        credentials: {
+            accessKeyId : config.get("aws").ACCESS_KEY_ID,
+            secretAccessKey: config.get("aws").SECRET_ACCES_KEY
+        } 
+    }).verifyEmailIdentity({EmailAddress: email}).promise();
+}

@@ -29,14 +29,7 @@ class CustomerDb {
     }
     async update (customerId: string, body: any): Promise<any> {
         try {
-            const updateQuery:any = {};
-            for (const key in body) {
-                if (Object.prototype.hasOwnProperty.call(body, key)) {
-                    const element = body[key];
-                    updateQuery[key] = element;
-                }
-            };
-            const result: Document = await this._db.findByIdAndUpdate({"_id": customerId}, updateQuery);
+            const result: Document = await this._db.findByIdAndUpdate(customerId, {...body}, {new: true});
             return result;
         } catch (error) {
             throw new ErrorHandler(401, error.message)

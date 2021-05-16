@@ -2,7 +2,7 @@ import isEmpty from "lodash/isEmpty";
 import { Model, Document } from "mongoose";
 import Review from "../models/review";
 import { IReviewInput } from '../interfaces/review';
-
+const ObjectID = require('mongodb');
 
 class ReviewDb {
     protected _db: Model<any> = Review;
@@ -15,36 +15,33 @@ class ReviewDb {
         return document;
     }
     async getReviewById(_id: String):Promise<Document> {
-        const document: Document = await this._db.findById(_id)
+        const document: Document = await this._db.findById(_id).populate(["customerId", "productId"])
         return document;
     }
     async getReviews(product_id:any, customer_id:any):Promise<Document[]> {
         const query:any = {};
-        if(product_id) {
+        if (product_id) {
             query.productId = product_id
         }
-        if(customer_id) {
-            query.customerId = customer_id
+        if (customer_id) {
+            query.customerId = ObjectID(customer_id)
         }
-        const documents: Document[] = await this.db.find(query).populate("customerId");
+        const documents: Document[] = await this.db.find({...query}).populate(["customerId", "productId"]);
+        return documents;
+    }
+    async getReviewsByProductId(productId:any):Promise<Document[]> {
+        const documents: Document[] = await this.db.find({productId, status: 'enabled'}).populate("customerId");
         return documents;
     }
     async deleteReview(reviewId: String):Promise<void> {
         await this.db.findByIdAndRemove(reviewId);
     }
-    async updateReview(reviewId: String, body: any):Promise<void> {
-        const filter = {"_id": reviewId};
-        const updateQuery:any = {};
-        if(isEmpty(body)){
+    async updateReview(reviewId: String, status: string):Promise<void> {
+        if (!status) {
             return;
+        } else {
+            await this.db.findByIdAndUpdate(reviewId, { status });
         }
-        for (const key in body) {
-            if (Object.prototype.hasOwnProperty.call(body, key)) {
-                const element = body[key];
-                updateQuery[key] = element;
-            }
-        };
-        await this.db.findByIdAndUpdate(filter, updateQuery);
     }
 }
 

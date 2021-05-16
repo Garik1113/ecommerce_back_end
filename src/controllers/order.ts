@@ -78,6 +78,16 @@ class OrderController {
             console.log(error)
         }
     }
+    public async updateOrder(req: Request, res: Response, next: NextFunction):Promise<void> {
+        const { orderData } = req.body;
+        try {
+            const document: Document = await OrderDb.updateOrder(orderData._id, orderData);
+            const order = convertDbOrderToNormal(document);
+            res.status(200).json({ order })
+        } catch (error) {
+            next(error)
+        }
+    }
 }
 
 export = new OrderController();

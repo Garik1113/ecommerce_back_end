@@ -11,7 +11,7 @@ import { convertDbProductToNormal,  getTotalPriceOfProduct } from "../common/pro
 import { IAddress } from "../interfaces/address";
 import { replaceQuotes } from '../helpers/objectId';
 const ObjectID = require('mongodb').ObjectID;
-
+import { sendEmail } from '../aws/aws'
 const prepareCartBeforeSending = async (cartObj:any = {}): Promise<ICart>  => {
     const { items } = cartObj;
     const itemsWithProducts: ICartItem[] = []
@@ -160,6 +160,7 @@ class CartController {
                 }
             }
         } catch (error) {
+            console.log(error)
             next(error);
         }
     }

@@ -13,7 +13,8 @@ export const convertCustomerObjecttToDbFormat = (customerObject: any):ICustomerI
         password: hashPassword(customerObject.password),
         cartId: customerObject.cartId,
         loggedIn: false,
-        addresses: customerObject.addresses
+        addresses: customerObject.addresses,
+        productSubscriptions: customerObject.productSubscriptions
     };
     return customer;
 }
@@ -24,10 +25,10 @@ export const convertDbCustomerToNormal = (dbCustomer: any):ICustomer => {
         firstName: dbCustomer.firstName,
         lastName: dbCustomer.lastName,
         email: dbCustomer.email,
-        password: dbCustomer.password,
         cartId: dbCustomer.cartId,
         loggedIn: dbCustomer.loggedIn,
-        addresses: dbCustomer.addresses
+        addresses: dbCustomer.addresses,
+        productSubscriptions: dbCustomer.productSubscriptions
     };
     return customer;
 }

@@ -64,8 +64,12 @@ class ConfigController {
     public getConfigValue = async(configName: string) => {
         try {
             const document: any = await this.db.getConfig();
-            const config: any = convertDbConfigToNormal(document)
-            return config[configName]
+            if (document) {
+                const config: any = convertDbConfigToNormal(document)
+                return config[configName]
+            } else {
+                return ""
+            }
         } catch (error) {
             throw new Error("Something wents wrong")
         } 

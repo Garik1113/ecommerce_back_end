@@ -29,6 +29,7 @@ class ProductDb {
     async updateProduct (_id: string, body: any):Promise<IProductInput | any> {
         try {
             const filter = {"_id": ObjectID(_id)};
+            console.log(_id)
             const updateQuery:any = {};
             for (const key in body) {
                 if (Object.prototype.hasOwnProperty.call(body, key)) {
@@ -200,10 +201,6 @@ class ProductDb {
                     $match: {
                         name: {
                             $regex: eval("/" + searchQuery + "/")
-                            // $search: {
-                            //     $regex: eval("/" + searchQuery + "/")
-                            // }
-                            // // $search: searchQuery
                         }
                     }
                 }

@@ -1,13 +1,10 @@
 import { NextFunction, Request, Response } from "express";
-import { UploadedFile } from "express-fileupload";
 import { Document } from "mongoose";
-import { uploadFile } from "../aws/aws";
 import SliderDb from '../collections/slider';
 import { convertDbSliderToNormal } from "../common/slider";
 import ErrorHandler from "../models/errorHandler";
 import { ISlider, ISliderInput } from '../interfaces/sliders';
 import { convertSliderObjectToDb } from '../common/slider';
-import fs from 'fs';
 import { uploadImage } from "../helpers/uploadImage";
 
 class SliderController {

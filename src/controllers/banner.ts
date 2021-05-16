@@ -1,14 +1,10 @@
 import { NextFunction, Request, Response } from "express";
-import { UploadedFile } from "express-fileupload";
 import { Document } from "mongoose";
-import { uploadFile } from "../aws/aws";
 import BannerDb from '../collections/banner';
 import { convertBannerObjectToDb, convertDbBannerToNormal } from "../common/banner";
 import ErrorHandler from "../models/errorHandler";
 import { IBannerInput } from "../interfaces/banner";
 import { uploadImage } from "../helpers/uploadImage";
-const sharp = require('sharp');
-import path from 'path';
 
 class BannerController {
     protected _db: typeof BannerDb = BannerDb;

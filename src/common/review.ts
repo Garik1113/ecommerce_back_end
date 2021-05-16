@@ -5,7 +5,8 @@ export const convertReviewObjectToDb = (reviewObj: any = {}):IReviewInput => {
         customerId: reviewObj.customerId,
         productId: reviewObj.productId,
         rating: reviewObj.rating,
-        comment: reviewObj.comment
+        comment: reviewObj.comment,
+        status: reviewObj.status
     }
 }
 
@@ -16,6 +17,7 @@ export const convertDbReviewToNormal = (dbReview: any):IReview=> {
         productId: dbReview.productId,
         rating: dbReview.rating,
         comment: dbReview.comment,
-        customer: dbReview.customerId
+        customer: dbReview.customerId,
+        status: dbReview.status
     }
 }
