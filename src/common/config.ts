@@ -1,4 +1,4 @@
-import { IConfig, IConfigInput } from "../interfaces/config";
+import { IConfigInput } from "../interfaces/config";
 
 export const convertConfigObjectToDb = (configObj: any = {}):IConfigInput => {
     return {

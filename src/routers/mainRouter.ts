@@ -13,6 +13,7 @@ import AttributeRouter from './attribute';
 import LocationRoutes from './locations';
 import ProductSubscriptionRouter from './productSubscription';
 import ConfigRoutes from './config';
+import FaqRouter from './faq';
 
 class MainRouter {
     private _router = Router();
@@ -27,9 +28,10 @@ class MainRouter {
     private _subSliderRouter = SliderRouter;
     private _subReviewRouter = ReviewRouter;
     private _subAttributeRouter = AttributeRouter;
-    private _subLocationRouter = LocationRoutes
-    private _subConfigRouter = ConfigRoutes
-    private _subProductSubscriptionRouter = ProductSubscriptionRouter
+    private _subLocationRouter = LocationRoutes;
+    private _subConfigRouter = ConfigRoutes;
+    private _subProductSubscriptionRouter = ProductSubscriptionRouter;
+    private _subFaqRouter = FaqRouter;
 
 
     get router() {
@@ -55,6 +57,7 @@ class MainRouter {
         this._router.use('/locations', this._subLocationRouter);
         this._router.use('/configs', this._subConfigRouter);
         this._router.use('/productSubscriptions', this._subProductSubscriptionRouter);
+        this._router.use('/faqs', this._subFaqRouter);
     }
 }
 

@@ -7,8 +7,9 @@ import { convertDbCartToNormal, createEmptycart } from '../common/cart';
 import { IOrder, IOrderInput } from '../interfaces/order';
 import { convertCartToOrder, convertDbOrderToNormal } from '../common/order';
 import ErrorHandler from '../models/errorHandler';
+const config = require('config');
 import Stripe from "stripe";
-const stripe: Stripe = require('stripe')("sk_test_51HPTvgB9AM6FXiSYbUwoiPaWX2zDSwVc7dYCEv70AHU7y5hrowWbkO5pdUyFfmlf00PM1CxOw9azGLDXSD6z1qIu00IEozmq5c");
+const stripe: Stripe = require('stripe')(config.get("stripe"). key);
 
 class OrderController {
     defaulMethod() {
@@ -25,9 +26,12 @@ class OrderController {
             }
             const cart: ICart = convertDbCartToNormal(cartDb);
             const { stripePaymentMethodId, totalPrice } = cart;
-            if (stripePaymentMethodId) {
+            
+            const usdValue = config.get('stripe').usd || 0;
+            const total = (Number(totalPrice) / (Number(usdValue))) * 100;
+            if (stripePaymentMethodId && cart.paymentMethod?.methodCode == "cart") {
                 await stripe.paymentIntents.create({
-                    amount: Math.ceil(totalPrice),
+                    amount: Math.ceil(total),
                     currency: "USD",
                     description: "Ecommerce payment",
                     payment_method: stripePaymentMethodId
@@ -39,6 +43,7 @@ class OrderController {
             await CartDb.updateCart(cartId, {...createEmptycart(), customerId: cart.customerId, stripePaymentMethodId: ""});
             res.status(200).json({ orderId: order._id });
         } catch (error) {
+            console.log(error)
            next(error)
         }
     }
@@ -78,10 +83,10 @@ class OrderController {
             console.log(error)
         }
     }
-    public async updateOrder(req: Request, res: Response, next: NextFunction):Promise<void> {
-        const { orderData } = req.body;
+    public async updateOrderStatus(req: Request, res: Response, next: NextFunction):Promise<void> {
+        const { status, orderId } = req.body;
         try {
-            const document: Document = await OrderDb.updateOrder(orderData._id, orderData);
+            const document: Document = await OrderDb.updateOrder(orderId, { status });
             const order = convertDbOrderToNormal(document);
             res.status(200).json({ order })
         } catch (error) {

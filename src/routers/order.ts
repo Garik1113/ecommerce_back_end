@@ -20,7 +20,7 @@ class OrderRouter {
         this.router.get('/admin', verifyToken, this._controller.getOrders)
         this.router.delete('/admin/:orderId', verifyToken, this._controller.deleteOrder)
         this.router.get('/admin/:orderId', verifyToken, this._controller.getOrder)
-        this.router.put('/admin/', verifyToken, this._controller.updateOrder)
+        this.router.put('/admin/status', verifyToken, this._controller.updateOrderStatus)
     }
 }
 

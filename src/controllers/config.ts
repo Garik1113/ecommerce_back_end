@@ -1,40 +1,9 @@
 import { NextFunction, Request, Response } from "express";
-import { Document } from "mongoose";
 import ConfigDb from '../collections/config';
-import { convertConfigObjectToDb, convertDbConfigToNormal } from "../common/config";
+import { convertDbConfigToNormal } from "../common/config";
 import ErrorHandler from "../models/errorHandler";
 import { uploadImage } from "../helpers/uploadImage";
-import { IConfig, IConfigInput } from "../interfaces/config";
 
-
-const config = [
-    {
-        title: "Store Email",
-        type: "text",
-        id: "storeEmail",
-    },
-    {
-        title: "Store Phone",
-        type: "text",
-        id: "storePhone",
-    },
-    {
-        title: "Store Phone",
-        type: "text",
-        id: "storePhone",
-    },
-    {
-        title: "Social Sites",
-        type: "addSelect",
-        id: "socialSites",
-        options: [
-            {
-                name: "",
-                url: ""
-            }
-        ]
-    }
-]
 
 class ConfigController {
     protected _db: typeof ConfigDb = ConfigDb;
@@ -83,7 +52,7 @@ class ConfigController {
             next(error);
         }    
     }
-    public async uploadImage(req: Request, res: Response, next: NextFunction):Promise<void> {
+    public async uploadImage(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             if (req.files) {
                 if (req.files.image) {

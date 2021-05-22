@@ -21,19 +21,9 @@ class ReviewController {
             if (!productDb) {
                 throw new ErrorHandler(203, "Product not found")
             }
-            const product:IProduct = convertDbProductToNormal(productDb);
             const result: Document = await this.db.createReview(review);
-            const productReviews: Document[] = await this.db.getReviews(product._id, false);
-            const reviews: IReview[] = productReviews.map(convertDbReviewToNormal);
-            let rating = 0;
-            for (let index = 0; index < reviews.length; index++) {
-                const element = reviews[index];
-                rating += Number(element.rating)
-            }
-            const averageRating = Math.ceil(Number(rating / reviews.length));
-            await ProductDb.updateProduct(product._id, { ...convertProductObjectToDbFormat(product), averageRating });
             const document: Document = await this.db.getReviewById(result._id);
-            const reviewResult: IReviewInput = convertDbReviewToNormal(document);
+            const reviewResult: IReview = convertDbReviewToNormal(document);
             res.status(200).json({review: reviewResult});
         } catch (error) {
             next(error);
@@ -82,6 +72,24 @@ class ReviewController {
         const { _id } = req.params;
         const { status } = req.body;
         try {
+            if (status == 'enabled') {
+                const document: Document = await this.db.getReviewById(_id);
+                const review: IReview = convertDbReviewToNormal(document);
+                const productResult = review.productId;
+                if (!productResult) {
+                    throw new ErrorHandler(203, "Product not found")
+                }
+                const product:IProduct = convertDbProductToNormal(productResult);
+                const productReviews: Document[] = await this.db.getReviews(product._id, false);
+                const reviews: IReview[] = productReviews.map(convertDbReviewToNormal);
+                let rating = 0;
+                for (let index = 0; index < reviews.length; index++) {
+                    const element = reviews[index];
+                    rating += Number(element.rating)
+                }
+                const averageRating = Math.ceil(Number(rating / reviews.length));
+                await ProductDb.updateProduct(product._id, { ...convertProductObjectToDbFormat(product), averageRating });
+            }
             await this.db.updateReview(_id, status);
             res.status(200).json({ status: "updated" });
         } catch (error) {

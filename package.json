@@ -14,6 +14,7 @@
     "@types/sharp": "^0.28.0",
     "@types/stripe": "^8.0.417",
     "aws-sdk": "^2.834.0",
+    "axios": "^0.21.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "config": "^3.3.3",
@@ -34,6 +35,7 @@
   },
   "devDependencies": {
     "@types/aws-sdk": "^2.7.0",
+    "@types/axios": "^0.14.0",
     "@types/bcryptjs": "^2.4.2",
     "@types/config": "^0.0.38",
     "@types/cors": "^2.8.9",

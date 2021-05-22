@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
+const config = require('config');
 
 class Database {
-    protected URI:string = "mongodb+srv://garik1319:Ga$1319759@cluster0.cm8bk.mongodb.net/<dbname>?retryWrites=true&w=majority";
-    protected URI2: string = "mongodb://127.0.0.1:27017" 
+    protected URI: string = `mongodb://127.0.0.1:27017/${config.get("mongoDb").dbName}`
 
     public async connect() {
         try {
-            await mongoose.connect(this.URI2, 
+            await mongoose.connect(this.URI, 
                 {   
                     useNewUrlParser: true,
                     useUnifiedTopology: true,
