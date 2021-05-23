@@ -157,7 +157,7 @@ class ProductDb {
         ]).catch(e => console.log("Error", e))
         return {
             products: items[0].products,
-            totals: items[0].totalsCount[0].totals
+            totals: items[0].totalsCount[0] ? items[0].totalsCount[0].totals : null
         };
     }
     async getAllProducts (params:any):Promise<Document[]> {

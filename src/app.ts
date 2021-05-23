@@ -9,20 +9,7 @@ import config from 'config';
 import { getTokenFromRequest } from './helpers/jwt';
 import jwt  from 'jsonwebtoken';
 import path from 'path';
-import Stripe from 'stripe';
-const stripe: Stripe = require('stripe')("sk_test_51HPTvgB9AM6FXiSYbUwoiPaWX2zDSwVc7dYCEv70AHU7y5hrowWbkO5pdUyFfmlf00PM1CxOw9azGLDXSD6z1qIu00IEozmq5c");
 
-/** 
- * Express application class.
- * @description Will later contain the routing system
-*/
-
-class Server {
-    public app: Express = express();
-    public router = MainRouter;
-};
-
-// const = new Server();
 const app: Express = express();
 const router = MainRouter;
  // support application/json type post data
@@ -35,19 +22,7 @@ app.use(express.static(path.resolve(__dirname, '../images')))
 app.use('/images', express.static(path.resolve(__dirname, '../images'))); 
 //support application/x-www-form-urlencoded post data
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use("/stripe/payment", async(req: Request, res: Response) => {
-    const { id, amount } = req.body;
-    
-    await stripe.paymentIntents.create({
-        amount,
-        currency: "USD",
-        description: "My shop description",
-        payment_method: id
-    });
-    res.json({
-        message: "OK"
-    })
-})
+
 app.use("*", async(req: Request, res: Response, next: NextFunction) => {
     const token: string | undefined = getTokenFromRequest(req);
     if (token) {

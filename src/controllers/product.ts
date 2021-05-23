@@ -123,7 +123,7 @@ class ProductController {
                 products,
                 attributes,
                 totalProducts: category?.products.length || products.length,
-                totals: req.body.userId ? document.totals : null
+                totals: req.body.userId && document ? document.totals : null
             });
         } catch (error) {
             next(error)
