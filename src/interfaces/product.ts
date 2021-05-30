@@ -6,9 +6,9 @@ export type Image = {
     main_image: string
 }
 
-export type ConfigurableAttribute = {
-    attribute: IAttribute,
-    selectedValue: IValue
+export type IConfigurableAttribute = {
+    attribute: string | IAttribute,
+    value: string | IValue
 }
 
 export type TCurrency = {
@@ -16,6 +16,7 @@ export type TCurrency = {
     code: string,
     symbol: string
 }
+
 
 export interface IProductInput {
     name: string,
@@ -29,7 +30,8 @@ export interface IProductInput {
     discountedPrice: number,
     currency: TCurrency,
     averageRating: number,
-    configurableAttributes: ConfigurableAttribute[],
+    configurableAttributes: IConfigurableAttribute[],
+    defaultPrice: number,
     images: Image[]
 };
 

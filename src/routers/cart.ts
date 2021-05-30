@@ -19,7 +19,7 @@ class CartRouter {
         this.router.put('/add_item', validateAddToCart(), this._controller.addItemToCart);
         this.router.put('/delete', this._controller.deleteCartItem);
         this.router.put('/quantity', this._controller.changeCartItemQuantity);
-        this.router.get('/:cartId', this._controller.getCart);
+        this.router.get('/:cartId', this._controller.getCartById);
         this.router.put('/add-shipping-address', this._controller.addShippingAddress)
         this.router.put('/add-billing-address', this._controller.addBillingAddress)
         this.router.put('/add-payment-method', this._controller.addPaymentMethod)

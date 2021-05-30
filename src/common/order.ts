@@ -1,3 +1,4 @@
+import CustomerDb from '../collections/customer';
 import { IOrder, IOrderInput } from '../interfaces/order';
 import { convertDbCustomerToNormal } from './customer';
 
@@ -21,13 +22,13 @@ export const convertCartToOrder = (cart: any):IOrderInput => {
     }
 }
 
-export const convertDbOrderToNormal = (orderObj: any):IOrder => {
+export const convertDbOrderToNormal = async(orderObj: any):Promise<IOrder> => {
     return {
         _id: orderObj._id,
         cartId: orderObj._id,
         shippingAddress: orderObj.shippingAddress,
         billingAddress: orderObj.billingAddress,
-        customer: orderObj.customer,
+        customer: await CustomerDb.getCustomerById(orderObj.customer),
         paymentMethod: orderObj.paymentMethod,
         shippingMethod: orderObj.shippingMethod,
         subTotal: orderObj.subTotal,

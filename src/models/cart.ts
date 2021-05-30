@@ -26,7 +26,6 @@ interface ICart extends ICartInput {
 const CartSchema:Schema = new Schema({
     items:  [
         { 
-            id: String,
             product: { 
                 type: Schema.Types.ObjectId,
                 ref: "Product"

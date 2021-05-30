@@ -1,5 +1,6 @@
 export interface IValueInput {
     name: string
+    id: string
 }
 
 export interface IValue extends IValueInput{
@@ -8,6 +9,7 @@ export interface IValue extends IValueInput{
 
 export interface IAttributeInput {
     name: string,
+    code: string,
     type: string,
     values: IValueInput[]
 }

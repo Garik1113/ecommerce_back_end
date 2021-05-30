@@ -5,7 +5,7 @@ import { convertReviewObjectToDb, convertDbReviewToNormal } from "../common/revi
 import ErrorHandler from "../models/errorHandler";
 import { IReview, IReviewInput } from "../interfaces/review";
 import ProductDb from '../collections/product';
-import { convertDbProductToNormal, convertProductObjectToDbFormat } from '../common/product';
+import { prepareProductData, convertProductObjectToDbFormat } from '../common/product';
 import { IProduct } from '../interfaces/product';
 
 class ReviewController {
@@ -79,7 +79,7 @@ class ReviewController {
                 if (!productResult) {
                     throw new ErrorHandler(203, "Product not found")
                 }
-                const product:IProduct = convertDbProductToNormal(productResult);
+                const product:IProduct = await prepareProductData(productResult, { withAttributeData: false });
                 const productReviews: Document[] = await this.db.getReviews(product._id, false);
                 const reviews: IReview[] = productReviews.map(convertDbReviewToNormal);
                 let rating = 0;

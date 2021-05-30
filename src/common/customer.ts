@@ -19,7 +19,7 @@ export const convertCustomerObjecttToDbFormat = (customerObject: any):ICustomerI
     return customer;
 }
 
-export const convertDbCustomerToNormal = (dbCustomer: any):ICustomer => {
+export const convertDbCustomerToNormal = (dbCustomer: any = {}):ICustomer => {
     const customer: ICustomer = {
         _id: dbCustomer._id,
         firstName: dbCustomer.firstName,

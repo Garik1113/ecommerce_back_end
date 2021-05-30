@@ -4,50 +4,19 @@ import CartDb from '../collections/cart';
 import { Result, ValidationError, validationResult } from 'express-validator';
 import { NextFunction, Request, Response } from 'express';
 import { ICartInput, ICartItemInput, ICartItem, ICart } from "../interfaces/cart";
-import { convertDbCartToNormal, convertInputAddressToNormal, createEmptycart } from "../common/cart";
+import { prepareCartData, convertInputAddressToNormal, createEmptycart, prepareCartDataForDb } from "../common/cart";
 import ProductDB from "../collections/product";
 import { IProduct } from "../interfaces/product";
-import { convertDbProductToNormal,  getTotalPriceOfProduct } from "../common/product";
+import { prepareProductData,  getTotalPriceOfProduct } from "../common/product";
 import { IAddress } from "../interfaces/address";
 import { replaceQuotes } from '../helpers/objectId';
 const ObjectID = require('mongodb').ObjectID;
-import { sendEmail } from '../aws/aws'
-const prepareCartBeforeSending = async (cartObj:any = {}): Promise<ICart>  => {
-    const { items } = cartObj;
-    const itemsWithProducts: ICartItem[] = []
-
-    for (let index = 0; index < items?.length; index++) {
-        const item = items[index];
-        const productResult = await ProductDB.getProductById(item.product);
-        const product = productResult ?  await convertDbProductToNormal(productResult) : "";
-        const readyItem:ICartItem = {
-            _id: item._id,
-            quantity: item.quantity,
-            product
-        }
-        itemsWithProducts.push(readyItem)
-    }
-    return {
-        _id: cartObj._id,
-        items: itemsWithProducts,
-        paymentMethod: cartObj.paymentMethod,
-        shippingMethod: cartObj.shippingMethod,
-        shippingAddress: cartObj.shippingAddress,
-        billingAddress: cartObj.billingAddress,
-        customerId: cartObj.customerId,
-        subTotal: cartObj.subTotal,
-        totalPrice: cartObj.totalPrice,
-        totalQty: cartObj.totalQty,
-        stripePaymentMethodId: cartObj.stripePaymentMethodId,
-        currency: cartObj.currency
-    };
-}
 
 const gerProductPrice = (product: any) => {
     return product.discountedPrice ? Number(product.discountedPrice) : Number(product.price)
 }
 
-const collectTotals = (cart: ICart): ICart => {
+const collectTotals = async (cartId: string, cart: ICart | any): Promise<ICart> => {
     const { shippingMethod, items } = cart;
     let shippingPrice = 0;
     let subTotal = 0;
@@ -58,18 +27,25 @@ const collectTotals = (cart: ICart): ICart => {
     };
     for (let index = 0; index < items.length; index++) {
         const item:ICartItem = items[index];
-        const { quantity, product } = item;
-        const price = Number(gerProductPrice(product).toFixed(2)) * Number(quantity);
-        subTotal += price;
-        totalQty += Number(quantity)
+        const { quantity, product: productId } = item;
+        const productDB = await ProductDB.getProductById(String(productId));
+        if (productDB) {
+            const product = await prepareProductData(productDB, { withAttributeData: false });
+            const price = Number(gerProductPrice(product).toFixed(2)) * Number(quantity);
+            subTotal += price;
+            totalQty += Number(quantity)
+        }  
     }
     totalPrice = subTotal + shippingPrice;
-    return {
+    const newCart = {
         ...cart,
         subTotal,
         totalPrice,
         totalQty
     }
+    const result = await CartDb.updateCart(cartId, prepareCartDataForDb(newCart));
+    const updatedCart = await prepareCartData(result, { joinProductData: true });
+    return updatedCart
 }
 
 class CartController {
@@ -97,7 +73,7 @@ class CartController {
                 throw new ErrorHandler(203, "Validation error", errors.array())
             }
             const productDb: Document = await ProductDB.getProductById(ObjectID(productId));
-            const product: IProduct = convertDbProductToNormal(productDb);
+            const product: IProduct = await prepareProductData(productDb, { withAttributeData: true });
             if (!productDb) {
                 throw new ErrorHandler(203, "Product that you tried to add is not exists")
             } else {
@@ -107,7 +83,7 @@ class CartController {
                 } else {
                     cartObj = await CartDb.getCartById(cartId);
                 }
-                if(product.quantity < 1) {
+                if (product.quantity < 1) {
                     throw new ErrorHandler(203, "Product that you tried to add is Out of stock")
                 }
                 
@@ -126,10 +102,10 @@ class CartController {
                         customerId: customerId ? replaceQuotes(customerId) : null
                     }
                     const cartDb: Document = await CartDb.creatCart(cart);
-                    const newCart:ICart = await prepareCartBeforeSending(cartDb);
+                    const newCart:ICart = await prepareCartData(cartDb, { joinProductData: true });
                     res.status(200).json({ cart: newCart });
                 } else {
-                    const cart = convertDbCartToNormal(cartObj);
+                    const cart = await prepareCartData(cartObj, { joinProductData: false });
                     const { items } = cart;
                     let exist = false;
                     for (let index = 0; index < items.length; index++) {
@@ -151,12 +127,9 @@ class CartController {
                             quantity
                         })
                     }
-                    const cartBeforeUpdate = await prepareCartBeforeSending(cart);
-                    const fixedCart = await collectTotals(cartBeforeUpdate);
-                    delete fixedCart._id
-                    const newCartResult = await CartDb.updateCartFixed(cart._id || "", fixedCart);
-                    const newCart = await prepareCartBeforeSending(newCartResult);
-                    res.status(200).json({ cart: newCart });
+                    const cartBeforeUpdate = await prepareCartData(cart, { joinProductData: false });
+                    const fixedCart = await collectTotals(String(cart._id), cartBeforeUpdate);
+                    res.status(200).json({ cart: fixedCart });
                 }
             }
         } catch (error) {
@@ -171,32 +144,26 @@ class CartController {
             if (!result) {
                 throw new ErrorHandler(203, "Cart not found");
             }
-            const cart:ICart = convertDbCartToNormal(result);
-            let newCart = cart;
+            const cart:ICart = await prepareCartData(result, { joinProductData: false });
             const findedItem = cart.items.find(e => e._id == itemId);
             if (findedItem) {
-                const { quantity } = findedItem;
-                const productResult = await ProductDB.getProductById(String(findedItem.product));
-                const product = await convertDbProductToNormal(productResult);
                 cart.items = cart.items.filter(e => e._id != itemId);
-                delete cart._id;
-                const cartBeforeUpdate = await prepareCartBeforeSending(cart);
-                const fixedCart = await collectTotals(cartBeforeUpdate);
-                delete fixedCart._id
-                const newCartResult = await CartDb.updateCartFixed(cartId, fixedCart);
-                newCart = await prepareCartBeforeSending(newCartResult);
+                const cartBeforeUpdate = await prepareCartData(cart, { joinProductData: true });
+                const fixedCart = await collectTotals(cartId, cartBeforeUpdate);
+                res.status(200).json({ cart: fixedCart });
+            } else {
+                res.status(200).json({ cart });
             }
-            res.status(200).json({ cart: newCart });
         } catch (error) {
             next(error)
         }
     }
-    public async getCart(req: Request, res: Response, next: NextFunction): Promise<void> {
+    public async getCartById(req: Request, res: Response, next: NextFunction): Promise<void> {
         const { cartId } = req.params;
         try {
             const result:Document = await CartDb.getCartById(cartId);
             if (result) {
-                const cart: ICart = await prepareCartBeforeSending(result);
+                const cart: ICart = await prepareCartData(result, { joinProductData: true });
                 res.status(200).json({ cart });
             } else {
                 res.status(200).json({ cart: null });
@@ -210,24 +177,23 @@ class CartController {
         const { cartId, itemId, quantity } = req.body;
         try {
             const cartDb = await CartDb.getCartById(cartId);
-            const cart: ICart = convertDbCartToNormal(cartDb);
+            if (!cartDb) {
+                throw new ErrorHandler(203, "Cart not found")
+            }
+            const cart: ICart = await prepareCartData(cartDb, { joinProductData: false });
             const { items } = cart;
             for (let index = 0; index < items.length; index++) {
                 const item = items[index];
                 if (item._id == itemId) {
-                    const { product } = item;
-                    const productDb = await ProductDB.getProductById(String(product));
-                    const productResult = convertDbProductToNormal(productDb);
+                    
                     item.quantity += Number(quantity);
                     break;
                 }
             }
-            const cartBeforeUpdate = await prepareCartBeforeSending(cart);
-            const fixedCart = await collectTotals(cartBeforeUpdate);
-            const newCartResult = await CartDb.updateCartFixed(cartId, fixedCart);
-            const newCart = await prepareCartBeforeSending(newCartResult);
-            res.status(200).json({ cart: newCart});
+            const fixedCart = await collectTotals(cartId, cart);
+            res.status(200).json({ cart: fixedCart });
         } catch (error) {
+            console.log("EROROORORORO", error)
             next(error);
         }
     }
@@ -239,10 +205,9 @@ class CartController {
             if(!result) {
                 throw new ErrorHandler(203, "Cart not found");
             }
-            const cart:ICart = convertDbCartToNormal(result);
-            const newCartResult: Document = await CartDb.updateCartFixed(cartId, {...cart, shippingAddress});
-            const newCart:ICart = await prepareCartBeforeSending(newCartResult);
-            res.status(200).json({ cart: newCart })
+            const newCart = await CartDb.updateCart(cartId, {...prepareCartDataForDb(result), shippingAddress});
+            const cart:ICart = await prepareCartData(newCart, { joinProductData: true });
+            res.status(200).json({ cart })
         } catch (error) {
             next(error);
         }
@@ -255,10 +220,9 @@ class CartController {
             if(!result) {
                 throw new ErrorHandler(203, "Cart not found");
             }
-            const cart:ICart = convertDbCartToNormal(result);
-            const newCartResult: Document = await CartDb.updateCartFixed(cartId, {...cart, billingAddress});
-            const newCart:ICart = await prepareCartBeforeSending(newCartResult);
-            res.status(200).json({ cart: newCart });
+            const newCart = await CartDb.updateCart(cartId, {...prepareCartDataForDb(result), billingAddress});
+            const cart:ICart = await prepareCartData(newCart, { joinProductData: true });
+            res.status(200).json({ cart })
         } catch (error) {
             next(error);
         }
@@ -270,10 +234,9 @@ class CartController {
             if(!result) {
                 throw new ErrorHandler(203, "Cart not found");
             }
-            const cart:ICart = convertDbCartToNormal(result);
-            const newCartResult: Document = await CartDb.updateCartFixed(cartId, {...cart, paymentMethod: method});
-            const newCart:ICart = await prepareCartBeforeSending(newCartResult);
-            res.status(200).json({ cart: newCart });
+            const newCart = await CartDb.updateCart(cartId, {...prepareCartDataForDb(result), paymentMethod: method});
+            const cart:ICart = await prepareCartData(newCart, { joinProductData: true });
+            res.status(200).json({ cart });
         } catch (error) {
             next(error);
         }
@@ -286,13 +249,9 @@ class CartController {
                 throw new ErrorHandler(203, "Cart not found");
             }
             result.shippingMethod = method;
-            const cartBeforeUpdate = await prepareCartBeforeSending(result);
-            const fixedCart = await collectTotals(cartBeforeUpdate);
-            delete fixedCart._id
-            
-            const newCartResult = await CartDb.updateCartFixed(cartId, fixedCart);
-            const newCart:ICart = await prepareCartBeforeSending(newCartResult);
-            res.status(200).json({ cart: newCart });
+            const cartBeforeUpdate = await prepareCartData(result, { joinProductData: false });
+            const fixedCart = await collectTotals(cartId, cartBeforeUpdate);
+            res.status(200).json({ cart: fixedCart });
         } catch (error) {
             next(error);
         }
@@ -301,13 +260,12 @@ class CartController {
         const { stripePaymentMethodId, cartId } = req.body;
         try {
             const result = await CartDb.getCartById(cartId);
-            if(!result) {
+            if (!result) {
                 throw new ErrorHandler(203, "Cart not found");
             }
-            const cart:ICart = convertDbCartToNormal(result);
-            const newCartResult: Document = await CartDb.updateCartFixed(cartId, {...cart, stripePaymentMethodId});
-            const newCart:ICart = await prepareCartBeforeSending(newCartResult);
-            res.status(200).json({ cart: newCart });
+            const cart:ICart = await prepareCartData(result, { joinProductData: true });
+            await CartDb.updateCart(cartId, {...prepareCartDataForDb(cart), stripePaymentMethodId});
+            res.status(200).json({ cart: { ...cart, stripePaymentMethodId } });
         } catch (error) {
             next(error);
         }

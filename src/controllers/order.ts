@@ -3,12 +3,13 @@ import OrderDb from '../collections/order';
 import CartDb from '../collections/cart';
 import { NextFunction, Request, Response } from "express";
 import { ICart } from '../interfaces/cart';
-import { convertDbCartToNormal, createEmptycart } from '../common/cart';
+import { prepareCartData, createEmptycart } from '../common/cart';
 import { IOrder, IOrderInput } from '../interfaces/order';
 import { convertCartToOrder, convertDbOrderToNormal } from '../common/order';
 import ErrorHandler from '../models/errorHandler';
 const config = require('config');
 import Stripe from "stripe";
+import { asyncForEach } from '../helpers/asyncForEach';
 const stripe: Stripe = require('stripe')(config.get("stripe"). key);
 
 class OrderController {
@@ -20,11 +21,11 @@ class OrderController {
     public async placeOrder(req: Request, res: Response, next: NextFunction):Promise<void> {
         const { cartId } = req.body;
         try {
-            const cartDb: Document = await CartDb.getCartForOrder(cartId);
+            const cartDb: Document = await CartDb.getCartById(cartId);
             if (!cartDb) {
                 throw new ErrorHandler(203, "Cart does not exist")
             }
-            const cart: ICart = convertDbCartToNormal(cartDb);
+            const cart: ICart = await prepareCartData(cartDb, { joinProductData: true });
             const { stripePaymentMethodId, totalPrice } = cart;
             
             const usdValue = config.get('stripe').usd || 0;
@@ -39,7 +40,7 @@ class OrderController {
             };
             const orderInput: IOrderInput = convertCartToOrder(cart);
             const orderDb = await OrderDb.placeOrder(orderInput);
-            const order: IOrder = convertDbOrderToNormal(orderDb);
+            const order: IOrder = await convertDbOrderToNormal(orderDb);
             await CartDb.updateCart(cartId, {...createEmptycart(), customerId: cart.customerId, stripePaymentMethodId: ""});
             res.status(200).json({ orderId: order._id });
         } catch (error) {
@@ -50,16 +51,26 @@ class OrderController {
     public async getOrdersByCustomer(req: Request, res: Response, next: NextFunction):Promise<void> {
         const { customerId } = req.body;
         try {
-            const result:Document[] = await OrderDb.getOrdersByCustomer(customerId);
-            res.status(200).json({orders: result.map(order => convertDbOrderToNormal(order))});
+            const results:Document[] = await OrderDb.getOrdersByCustomer(customerId);
+            const orders:IOrder[] = []
+            await asyncForEach(results, async(item:any) => {
+                const order:IOrder = await convertDbOrderToNormal(item);
+                orders.push(order)
+            })
+            res.status(200).json({ orders });
         } catch (error) {
             console.log(error)
         }
     }
     public async getOrders(req: Request, res: Response, next: NextFunction):Promise<void> {
         try {
-            const result:Document[] = await OrderDb.getOrders();
-            res.status(200).json({orders: result.map(convertDbOrderToNormal)});
+            const results:Document[] = await OrderDb.getOrders();
+            const orders:IOrder[] = []
+            await asyncForEach(results, async(item:any) => {
+                const order:IOrder = await convertDbOrderToNormal(item);
+                orders.push(order)
+            })
+            res.status(200).json({ orders });
         } catch (error) {
             console.log(error)
         }
@@ -77,7 +88,7 @@ class OrderController {
         const { orderId } = req.params
         try {
             const document: Document = await OrderDb.getOrder(orderId);
-            const order = convertDbOrderToNormal(document)
+            const order = await convertDbOrderToNormal(document)
             res.status(200).json({ order })
         } catch (error) {
             console.log(error)
@@ -87,7 +98,7 @@ class OrderController {
         const { status, orderId } = req.body;
         try {
             const document: Document = await OrderDb.updateOrder(orderId, { status });
-            const order = convertDbOrderToNormal(document);
+            const order = await convertDbOrderToNormal(document);
             res.status(200).json({ order })
         } catch (error) {
             next(error)

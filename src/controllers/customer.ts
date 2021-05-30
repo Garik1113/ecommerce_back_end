@@ -30,7 +30,7 @@ class CustomerController {
             const customerDb: ICustomerInput = convertCustomerObjecttToDbFormat(req.body);
             const existCustomer = await CustomerDb.findByEmail(customerDb.email);
             if (existCustomer) {
-                throw new ErrorHandler(409, "Customer with that email is already exist");
+                throw new ErrorHandler(409, "Տվյալ Էլ հասցե-ով օգտատեր գոյություն ունի");
             } else {
                 const { productSubscriptions } = req.body;
                 const cart: Document = await CartDb.creatCart({...createEmptycart()});
@@ -56,14 +56,14 @@ class CustomerController {
             }
             const customerDb: any = await CustomerDb.findByEmail(email);
             if (!customerDb) {
-                throw new ErrorHandler(401, "Customer with that email is not exists");
+                throw new ErrorHandler(401, "Տվյալ Էլ հասցե-ով օգտատեր գոյություն չունի");
             }
             if (comparePasswords(password, customerDb.password || "")) {
                 const token: string = generateTokenWithCustomerId(customerDb._id);
                 await CustomerDb.update(customerDb._id, { loggedIn: true });
                 res.status(200).json({ token });
             } else {
-                throw new ErrorHandler(401, "Incorrect password");
+                throw new ErrorHandler(401, "Սխալ Գախտնաբառ");
             }
         } catch (error) {
             next(error);
@@ -99,7 +99,7 @@ class CustomerController {
                     const customer: ICustomer = convertDbCustomerToNormal(newCustomer)
                     res.status(200).json({ customer });
                 } else {
-                    throw new ErrorHandler(203, "Passwords are not the same")
+                    throw new ErrorHandler(203, "Գախտնաբառերը նույնը չեն")
                 }
             } else {
                 const result = await CustomerDb.update(replaceQuotes(customerId), data);

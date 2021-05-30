@@ -21,7 +21,7 @@ export type TCartItemAttribute = {
 
 export interface ICartItemInput {
     quantity: number,
-    product: string | IProduct
+    product: string | IProduct,
 }
 
 export interface ICartItem extends ICartItemInput {

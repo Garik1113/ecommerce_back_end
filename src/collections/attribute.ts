@@ -15,7 +15,7 @@ class AttributeDb {
         return document;
     }
     async getAttributes():Promise<Document[]> {
-        const documents: Document[] = await this.db.find({});
+        const documents: Document[] = await this.db.find({}).lean();
         return documents;
     }
     async customerGetFilters():Promise<Document[]> {

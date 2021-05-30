@@ -1,5 +1,8 @@
 import { IAddress } from "../interfaces/address";
-import { ICartInput, ICart, ICartItemInput, TCartItemAttribute } from "../interfaces/cart";
+import { ICartInput, ICart, ICartItemInput, ICartItem } from "../interfaces/cart";
+import ProductDB from '../collections/product'
+import { prepareProductData } from './product';
+import { asyncForEach } from '../helpers/asyncForEach';
 
 export const getTotalQtyOfItems = (items: any[] = []) => {
     const qty:number = items.reduce((initialState: number, current: ICartItemInput) => {
@@ -7,25 +10,6 @@ export const getTotalQtyOfItems = (items: any[] = []) => {
             return initialState;
     }, 0);
     return qty;
-}
-
-export const convertDbCartToNormal = (cartObj: any = {}): ICart => {
-    const cart: ICart = {
-        _id: cartObj._id,
-        items: cartObj.items || [],
-        paymentMethod: cartObj.paymentMethod,
-        shippingMethod: cartObj.shippingMethod,
-        shippingAddress: cartObj.shippingAddress,
-        billingAddress: cartObj.billingAddress,
-        customerId: cartObj.customerId,
-        totalPrice: cartObj.totalPrice,
-        subTotal: cartObj.subTotal,
-        totalQty: cartObj.totalQty,
-        stripePaymentMethodId: cartObj.stripePaymentMethodId,
-        currency: cartObj.currency
-    };
-
-    return cart;
 }
 
 export const createEmptycart = (): ICartInput => {
@@ -66,4 +50,62 @@ export const convertInputAddressToNormal = (address: any): IAddress => {
         isBillingAddress: address.isBillingAddress,
         isShippingAddress: address.isShippingAddress
     }
+}
+
+type PrepareCartParams = {
+    joinProductData: boolean
+}
+
+export const prepareCartData = async (cartObj:any = {}, params: PrepareCartParams): Promise<ICart> => {
+    const { items = [] } = cartObj;
+    const cartItems: ICartItem[] = []
+    const { joinProductData } = params;
+    if (joinProductData) {
+        if (items && items.length) {
+            await asyncForEach(items, async(item: ICartItem) => {
+                const { product: productId, quantity, _id } = item;
+                const productDb = await ProductDB.getProductById(String(productId));
+                if (productDb) {
+                    const product = await prepareProductData(productDb, { withAttributeData: true });
+                    cartItems.push({
+                        _id, 
+                        product,
+                        quantity
+                    })
+                }
+            }) 
+        }
+    } else {
+        cartObj.items = cartObj.items.map((e: any) => {
+            return {
+                quantity: e.quantity,
+                product: e.product,
+                _id: e._id
+            }
+        })
+    }
+    return {
+        _id: cartObj._id,
+        items: joinProductData ? cartItems : items,
+        paymentMethod: cartObj.paymentMethod,
+        shippingMethod: cartObj.shippingMethod,
+        shippingAddress: cartObj.shippingAddress,
+        billingAddress: cartObj.billingAddress,
+        customerId: cartObj.customerId,
+        subTotal: cartObj.subTotal,
+        totalPrice: cartObj.totalPrice,
+        totalQty: cartObj.totalQty,
+        stripePaymentMethodId: cartObj.stripePaymentMethodId,
+        currency: cartObj.currency
+    };
+}
+
+export const prepareCartDataForDb = (cart: ICart): ICart => {
+    cart.items = cart.items.map((e:ICartItem) => {
+        return {
+            quantity: e.quantity,
+            product: typeof e.product == "object" ? e.product._id : e.product
+        }
+    })
+    return cart;
 }

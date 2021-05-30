@@ -25,12 +25,13 @@ const prepareDataForEmail = (productSubscribers: IProductSubscription[] = []):an
     return productSubscribers.map(e => {
         if (e.customerId && typeof e.customerId == "object" && e.productId) {
             const { email } = e.customerId;
-            const { quantity, name } = e.productId as IProduct;
+            const { quantity, name, _id } = e.productId as IProduct;
             if (Number(quantity) > 0) {
                 return {
                     email,
                     quantity,
                     productName: name,
+                    productId: _id,
                     id: e._id,
                 }   
             }
@@ -43,7 +44,7 @@ const sendEmailsToProductSubscribers = async(preparedData: any[] = []):Promise<v
         await sendEmail({
             to: data.email,
             subject: "Product Now in stock",
-            content: `Product ${data.productName} now in stock`
+            content: `${data.productName}ը արդեն հասանելի է, դուք կարող եք տեսնել այն այցելելով http://localhost:3000/product/${data.productId}`
         });
         await Productsubscriptions.deleteProductSubscription(data.id)
     })

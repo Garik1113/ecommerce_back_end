@@ -5,6 +5,9 @@ import Product from "../models/product";
 import ConfigController from '../controllers/config';
 import { IProductInput } from "../interfaces/product";
 import { replaceQuotes } from '../helpers/objectId';
+import AttributeDb from './attribute';
+import { convertDbAttributeToNormal } from '../common/attribute';
+import { isEmpty } from 'lodash';
 
 
 class ProductDb {
@@ -29,7 +32,6 @@ class ProductDb {
     async updateProduct (_id: string, body: any):Promise<IProductInput | any> {
         try {
             const filter = {"_id": ObjectID(_id)};
-            console.log(_id)
             const updateQuery:any = {};
             for (const key in body) {
                 if (Object.prototype.hasOwnProperty.call(body, key)) {
@@ -50,9 +52,20 @@ class ProductDb {
             throw new ErrorHandler(401, error.message)
         }
     }
-    async getProducts (category_id: String, params: any): Promise<any> {
-        const perPage = await ConfigController.getConfigValue("productsPerPage")
-        const { date, ids, limit, page, discount, price_min, price_max, sort, sort_dir, size, color } = params;
+    async getProducts (params: any): Promise<any> {
+        const perPage = await ConfigController.getConfigValue("productsPerPage");
+        const { ids, page, discount, price_min, price_max, sort, sort_dir, category_id } = params;
+        const attributesResult = await AttributeDb.getAttributes();
+        const attributeCodes = attributesResult.map(convertDbAttributeToNormal).map(a => a.code);
+        const filters:any = {};
+        for (const key in params) {
+            if (Object.prototype.hasOwnProperty.call(params, key)) {
+                const value = params[key];
+                if (attributeCodes.includes(key) && value) {
+                    filters[key] = value;
+                }
+            }
+        }
         let matchParams: any = {
             $match: {},
         };
@@ -75,44 +88,24 @@ class ProductDb {
             }
         }
         if (price_min && price_min !== "undefined") {
-            matchParams.$match.price = {
+            matchParams.$match.defaultPrice = {
                 $gt: Number(price_min)
             };
         }
         if (price_max && price_max !== "undefined") {
-            matchParams.$match.price = {
-                ...matchParams.$match.price,
+            matchParams.$match.defaultPrice = {
                 $lt: Number(price_max)
             };
         }
         
-        if (size && color) {
-            matchParams.$match = {
-                ...matchParams.$match,
-                $and: [
-                    {
-                       configurableAttributes: {
-                            $elemMatch: {
-                                "selectedValue._id": String(size)
-                            } 
-                        }
-                    },
-                    {
-                        configurableAttributes: {
-                            $elemMatch: {
-                                "selectedValue._id": String(color)
-                            } 
-                        }
-                    },  
-                ]
-            }
-        } else if (size || color) {
-            matchParams.$match = {
-                ...matchParams.$match,
-                configurableAttributes: {
-                    $elemMatch: {
-                        "selectedValue._id": String(size || color)
-                    } 
+        if (!isEmpty(filters)) {
+            for (const key in filters) {
+                if (Object.prototype.hasOwnProperty.call(filters, key)) {
+                    const element = filters[key];
+                    matchParams.$match = {
+                        ...matchParams.$match,
+                        [`filters.${key}`]: element
+                    }
                 }
             }
         }
@@ -133,9 +126,9 @@ class ProductDb {
             aggr.push(sortParams);
         } else if (sort == "price") {
             if (sort_dir == "asc") {
-                sortParams.$sort.price = -1;
+                sortParams.$sort.defaultPrice = -1;
             } else {
-                sortParams.$sort.price = 1;
+                sortParams.$sort.defaultPrice = 1;
             }
             aggr.push(sortParams);
         }
@@ -150,7 +143,7 @@ class ProductDb {
                 $facet: {
                     products: aggr,
                     totalsCount: [
-                        {$count: "totals"}
+                        { $count: "totals" }
                     ]
                 }
             }
@@ -159,40 +152,6 @@ class ProductDb {
             products: items[0].products,
             totals: items[0].totalsCount[0] ? items[0].totalsCount[0].totals : null
         };
-    }
-    async getAllProducts (params:any):Promise<Document[]> {
-        const { date, ids, name, sort, limit, skip, perPage = 2 } = params;
-        const matchParams: any = {};
-        const sortParams: any = {};
-        const aggr:any = [
-            {  
-                $match: matchParams,
-            }
-        ];
-        if(ids) {
-            const matchIds = ids.split(",").map((id: string) => ObjectID(id));
-            matchParams._id = {
-                $in: matchIds
-            }
-        }
-        if (name) {
-            matchParams.name = {
-                $search: "/" + replaceQuotes(name) + "/"
-            }
-        }
-        if (date == "latest") {
-            sortParams.createdAt = -1;
-            aggr.push(sortParams)
-        }
-
-        if(limit) {
-            aggr.push({$limit: Number(limit)})
-        }
-        if (skip) {
-            aggr.push({$skip: Number(skip) * Number(perPage)})
-        }
-        const items: Document[] = await this._db.aggregate(aggr);
-        return items;
     }
     async searchProduct (searchQuery: any):Promise<Document[]> {
         try {
