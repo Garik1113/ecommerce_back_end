@@ -148,7 +148,7 @@ class CartController {
             const findedItem = cart.items.find(e => e._id == itemId);
             if (findedItem) {
                 cart.items = cart.items.filter(e => e._id != itemId);
-                const cartBeforeUpdate = await prepareCartData(cart, { joinProductData: true });
+                const cartBeforeUpdate = await prepareCartData(cart, { joinProductData: false });
                 const fixedCart = await collectTotals(cartId, cartBeforeUpdate);
                 res.status(200).json({ cart: fixedCart });
             } else {

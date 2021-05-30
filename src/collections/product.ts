@@ -83,18 +83,19 @@ class ProductDb {
             }
         }
         if (discount) {
-            matchParams.$match.discount = {
+            matchParams.$match.discountedPrice = {
                 $gt: 0
             }
         }
         if (price_min && price_min !== "undefined") {
             matchParams.$match.defaultPrice = {
-                $gt: Number(price_min)
+                $gte: Number(price_min)
             };
         }
         if (price_max && price_max !== "undefined") {
             matchParams.$match.defaultPrice = {
-                $lt: Number(price_max)
+                ...matchParams.$match.defaultPrice,
+                $lte: Number(price_max)
             };
         }
         
@@ -138,19 +139,46 @@ class ProductDb {
         if (perPage) {
             aggr.push({$limit: Number(perPage)});
         }
+        console.log("matchParams['$match']", matchParams['$match'])
         const items: any[] | any = await this._db.aggregate([
             {
                 $facet: {
                     products: aggr,
-                    totalsCount: [
-                        { $count: "totals" }
+                    total: [
+                        {
+                            $match: matchParams['$match']
+                        },
+                        {
+                            $count: "count"
+                        },
+                    ],
+                    prices: [
+                        {
+                            $group: {
+                                _id: "_id",
+                                minPrice: { 
+                                    $min: "$defaultPrice",
+                                },
+                                maxPrice: { 
+                                    $max: "$defaultPrice",
+                                },
+                            }
+                        }
                     ]
                 }
             }
         ]).catch(e => console.log("Error", e))
+
+        const total = items[0].total[0] ? items[0].total[0].count: 1;
+        const  minPrice = items[0].prices[0] ? items[0].prices[0].minPrice : 0;
+        const  maxPrice =  items[0].prices[0] ? items[0].prices[0].maxPrice : 0;
+
         return {
             products: items[0].products,
-            totals: items[0].totalsCount[0] ? items[0].totalsCount[0].totals : null
+            totals: total,
+            perPage: perPage || 9,
+            minPrice,
+            maxPrice,
         };
     }
     async searchProduct (searchQuery: any):Promise<Document[]> {

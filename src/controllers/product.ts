@@ -133,8 +133,12 @@ class ProductController {
                 products,
                 attributes,
                 totalProducts: document.totals,
+                pageSize: document.perPage,
+                minPrice: document.minPrice,
+                maxPrice: document.maxPrice
             });
         } catch (error) {
+            console.log(error)
             next(error)
         }
     }
@@ -142,7 +146,14 @@ class ProductController {
         const { search_query } = req.query;
         try {
             const results: Document[] = await ProductDb.searchProduct(search_query);
-            res.status(200).json({products: results})
+            const products:IProduct[] = [];
+            if (results && results.length) {
+                await asyncForEach(results, async(result: any) => {
+                    const product = await prepareProductData(result, { withAttributeData: true });
+                    products.push(product)
+                })
+            }
+            res.status(200).json({ products })
         } catch (error) {
             next(error)
         }

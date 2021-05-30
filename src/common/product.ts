@@ -41,7 +41,7 @@ export const convertProductObjectToDbFormat = async (productObj: any = {}): Prom
         discountedPrice: productObj.discountedPrice || 0,
         discount: productObj.discount || 0,
         defaultPrice: productObj.discountedPrice || productObj.price,
-        averageRating: productObj.averageRating || 1,
+        averageRating: Number(productObj.averageRating) < 3 ? 3 : productObj.averageRating,
         categories: productObj.categories || [],
         images: makeImageReadyForDb(productObj.images) || [],
         quantity: productObj.quantity || 0,
