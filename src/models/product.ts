@@ -39,6 +39,7 @@ const ProductSchema: Schema = new Schema({
     quantity: { type: Number, default: 0 },
     price: { type: Number, default: 0 },
     discountedPrice: { type: Number, default: 0 },
+    //for soring by price
     defaultPrice: { type: Number, default: 0 },
     discount: { type: Number, default: 0 },
     currency: {

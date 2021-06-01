@@ -139,7 +139,6 @@ class ProductDb {
         if (perPage) {
             aggr.push({$limit: Number(perPage)});
         }
-        console.log("matchParams['$match']", matchParams['$match'])
         const items: any[] | any = await this._db.aggregate([
             {
                 $facet: {
